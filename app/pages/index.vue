@@ -8,10 +8,9 @@ const online = useOnline()
 
 <template>
   <div>
-    <Logos mb-6 />
     <ClientOnly>
       <Suspense>
-        <PageView v-if="online" />
+        <Eat v-if="online" />
         <div v-else text-gray:80>
           You're offline
         </div>
@@ -27,6 +26,5 @@ const online = useOnline()
         </div>
       </template>
     </ClientOnly>
-    <InputEntry />
   </div>
 </template>
