@@ -1,16 +1,18 @@
 # whatToEat
 
-一个基于今天吃什么？"的决策工具，帮助你快速选择合适的菜谱。
+> 今天吃什么？的决策工具，帮助你快速选择合适的菜谱。
+
+<img src="./public/og-image.png" alt="License">
 
 ## 项目介绍
 
-whatToEat 是一个基于 Nuxt 构建的单页应用，旨在解决日常饮食选择的困扰。通过提供丰富的菜谱数据，帮助用户随机选择或筛选适合的菜品，轻松解决"今天吃什么"的难题。
+whatToEat 是一个基于 Nuxt 构建的应用，旨在解决日常饮食选择的困扰。通过提供丰富的菜谱数据，帮助用户随机选择或筛选适合的菜品，轻松解决"今天吃什么"的难题。
 
 ## 快速开始
 
 ### 在线体验
 
-直接访问 [应用地址](https://eat.ryanuo.cc/) 体验（需替换为实际部署地址）
+直接访问 [体验](https://eat.ryanuo.cc/)
 
 ### 本地运行
 
@@ -51,18 +53,8 @@ pnpm preview
 
 ### 部署选项
 
-- **Netlify**：配置已包含在 `netlify.toml` 中，可直接连接 GitHub 仓库自动部署
-- **Vercel**：兼容 Nuxt 应用，可直接导入部署
-- **自建服务器**：构建后将 `.output/public` 目录内容部署到静态服务器
-
-## 项目结构
-
-- `app/components`：UI 组件
-- `app/pages`：页面组件
-- `app/types`：TypeScript 类型定义
-- `app/utils`：工具函数
-- `server/routes`：API 路由
-- `public`：静态资源
+[![Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/ryanuo/whatToEat)
+[![Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ryanuo/whatToEat)
 
 ## 数据来源
 

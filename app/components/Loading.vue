@@ -1,71 +1,30 @@
 <template>
-  <div class="pinwheel">
-    <div class="pinwheel__line" />
-    <div class="pinwheel__line" />
-    <div class="pinwheel__line" />
-    <div class="pinwheel__line" />
-    <div class="pinwheel__line" />
-    <div class="pinwheel__line" />
-  </div>
+  <div class="loader" />
 </template>
 
 <style scoped>
-.pinwheel {
-  --uib-size: 45px;
-  --uib-speed: 0.8s;
-  --uib-color: #312f2b;
-  --uib-line-weight: 4px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--uib-size);
-  width: var(--uib-size);
+.loader {
+  width: fit-content;
+  font-weight: bold;
+  font-family: monospace;
+  font-size: 30px;
+  background: radial-gradient(circle closest-side, #000 94%, #0000) right/calc(200% - 1em) 100%;
+  animation: l24 1s infinite alternate linear;
 }
 
-.pinwheel__line {
-  position: absolute;
-  top: calc(50% - var(--uib-line-weight) / 2);
-  left: 0;
-  height: var(--uib-line-weight);
-  width: 100%;
-  border-radius: calc(var(--uib-line-weight) / 2);
-  background-color: var(--uib-color);
-  animation: rotate81232 var(--uib-speed) ease-in-out infinite;
+.loader::before {
+  content: 'Loading...';
+  line-height: 1em;
+  color: #0000;
+  background: inherit;
+  background-image: radial-gradient(circle closest-side, #fff 94%, #000);
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
-.pinwheel__line:nth-child(2) {
-  animation-delay: calc(var(--uib-speed) * 0.075);
-  opacity: 0.8;
-}
-
-.pinwheel__line:nth-child(3) {
-  animation-delay: calc(var(--uib-speed) * 0.15);
-  opacity: 0.6;
-}
-
-.pinwheel__line:nth-child(4) {
-  animation-delay: calc(var(--uib-speed) * 0.225);
-  opacity: 0.4;
-}
-
-.pinwheel__line:nth-child(5) {
-  animation-delay: calc(var(--uib-speed) * 0.3);
-  opacity: 0.2;
-}
-
-.pinwheel__line:nth-child(6) {
-  animation-delay: calc(var(--uib-speed) * 0.375);
-  opacity: 0.1;
-}
-
-@keyframes rotate81232 {
-  0% {
-    transform: rotate(0deg);
-  }
-
+@keyframes l24 {
   100% {
-    transform: rotate(180deg);
+    background-position: left;
   }
 }
 </style>
