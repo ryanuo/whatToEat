@@ -92,13 +92,13 @@ declare global {
     <div class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
       <div class="text-center w-full -mt-20">
         <h1
-          class="text-[clamp(2rem,5vw,3rem)] text-gray-800 font-normal mb-6 cursor-pointer whitespace-nowrap text-ellipsis overflow-hidden"
+          class="text-[clamp(2rem,5vw,3rem)] text-gray-800 font-normal mb-6 whitespace-nowrap text-ellipsis overflow-hidden"
           :class="{ 'animate-shake': shakeTitle }"
         >
           <span class="today">今天</span>
           <span class="eat">吃</span>
           <a :href="getOriginRecipeLink(currentFood?.source_path)" target="_blank" rel="noopener noreferrer">
-            <b class="what text-gray-900 font-bold">{{ replaceText(currentFood?.name) }}</b>
+            <b class="what text-gray-900 font-bold cursor-pointer">{{ replaceText(currentFood?.name) }}</b>
           </a>
           <span class="punctuation">？</span>
         </h1>
