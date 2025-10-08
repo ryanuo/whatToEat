@@ -6,6 +6,7 @@ const isPlaying = ref<boolean>(false)
 const currentFood = ref<CurrentFood>()
 const shakeTitle = ref<boolean>(false)
 const { data } = await useFetch<RecipeResponse>('/api/recipes')
+const nameText = computed(() => replaceText(currentFood.value?.name))
 
 // 开始/停止随机选择
 function togglePlay() {
@@ -97,8 +98,18 @@ declare global {
         >
           <span class="today">今天</span>
           <span class="eat">吃</span>
-          <a :href="getOriginRecipeLink(currentFood?.source_path)" target="_blank" rel="noopener noreferrer">
-            <b class="what text-gray-900 font-bold cursor-pointer">{{ replaceText(currentFood?.name) }}</b>
+          <a
+            :href="getOriginRecipeLink(currentFood?.source_path)"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-block cursor-pointer"
+          >
+            <b
+              class="text-gray-900 font-bold underline-black underline-offset-10 underline-dashed transition-all hover:underline-cyan"
+              :class="{ underline: nameText !== '神马' }"
+            >
+              {{ nameText }}
+            </b>
           </a>
           <span class="punctuation">？</span>
         </h1>
