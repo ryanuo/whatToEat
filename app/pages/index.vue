@@ -15,8 +15,8 @@ const online = useOnline()
           You're offline
         </div>
         <template #fallback>
-          <div op50 italic>
-            <span animate-pulse>Loading...</span>
+          <div class="grid h-screen italic place-items-center">
+            <span class="animate-pulse"><Loading /></span>
           </div>
         </template>
       </Suspense>
