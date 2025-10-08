@@ -79,6 +79,7 @@ declare global {
 
 <template>
   <div class="bg-[#E9E9E9] min-h-screen relative overflow-hidden">
+    <Header />
     <!-- 背景 -->
     <div
       class="bg-[#E9E9E9] bg-[url('/pic/bg.png')] transition-all inset-0 absolute z-0 bg-center"
@@ -116,7 +117,7 @@ declare global {
 
         <button
           id="start"
-          class="cursor-pointer"
+          class="outline-none cursor-pointer"
           @click="togglePlay"
         >
           <FancyButton
