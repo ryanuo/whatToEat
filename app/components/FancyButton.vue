@@ -32,10 +32,10 @@ const props = defineProps<{
 .button {
   position: relative;
   z-index: 0;
-  width: 240px;
-  height: 56px;
+  width: 200px;
+  height: 50px;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 18px;
   font-weight: bold;
   color: var(--line_color);
   letter-spacing: 2px;
