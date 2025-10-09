@@ -4,7 +4,7 @@ export function replaceText(text?: string) {
 
 export function getOriginRecipeLink(source_path?: string) {
   if (!source_path)
-    return '#'
+    return ''
 
   return `https://cook.aiursoft.cn/${source_path?.replace('.md', '')}`
 }
