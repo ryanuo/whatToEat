@@ -10,7 +10,9 @@ useHead({
   <VitePwaManifest />
   <NuxtLayout>
     <NuxtPage />
-    <FluidCursor v-if="isPC()" />
+    <ClientOnly>
+      <FluidCursor v-if="isPC()" />
+    </ClientOnly>
   </NuxtLayout>
 </template>
 
