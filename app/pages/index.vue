@@ -21,8 +21,8 @@ const online = useOnline()
         </template>
       </Suspense>
       <template #fallback>
-        <div op50>
-          <span animate-pulse>...</span>
+        <div class="grid h-screen italic place-items-center">
+          <span class="animate-pulse"><Loading /></span>
         </div>
       </template>
     </ClientOnly>
