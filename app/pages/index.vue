@@ -8,23 +8,27 @@ const online = useOnline()
 
 <template>
   <div>
-    <ClientOnly>
+    <!-- ClientOnly 确保只在客户端渲染 -->
+    <ClientOnly fallback-tag="div" fallback="">
       <Suspense>
-        <Eat v-if="online" />
-        <div v-else text-gray:80>
-          You're offline
-        </div>
+        <!-- 默认 slot，单根节点 -->
+        <template #default>
+          <div>
+            <Eat v-if="online" />
+
+            <div v-else class="text-gray-80">
+              You're offline
+            </div>
+          </div>
+        </template>
+
+        <!-- fallback slot -->
         <template #fallback>
           <div class="grid h-screen italic place-items-center">
             <span class="animate-pulse"><Loading /></span>
           </div>
         </template>
       </Suspense>
-      <template #fallback>
-        <div class="grid h-screen italic place-items-center">
-          <span class="animate-pulse"><Loading /></span>
-        </div>
-      </template>
     </ClientOnly>
   </div>
 </template>

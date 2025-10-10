@@ -1,95 +1,98 @@
 <script setup lang="ts">
 import type { CurrentFood, RecipeResponse } from '~/types'
 
-// 状态管理
-const isPlaying = ref<boolean>(false)
+const isPlaying = ref(false)
 const currentFood = ref<CurrentFood>()
-const shakeTitle = ref<boolean>(false)
+const shakeTitle = ref(false)
 const { data } = await useFetch<RecipeResponse>('/api/recipes')
 
-// 开始/停止随机选择
+let randomTimer: ReturnType<typeof setTimeout> | null = null
+
 function togglePlay() {
-  if (isPlaying.value) {
+  if (isPlaying.value)
     stopRandom()
-  }
-  else {
+  else
     startRandom()
-  }
   isPlaying.value = !isPlaying.value
 }
 
-// 开始随机
+// ✅ 改用递归随机器
 function startRandom() {
+  if (!import.meta.client)
+    return // ✅ 防止 SSR 阶段执行
+
   currentFood.value = undefined
   shakeTitle.value = true
 
-  // 清除之前的定时器
-  if (window.randomInterval) {
-    clearInterval(window.randomInterval)
-  }
-
-  // 设置新的定时器
-  window.randomInterval = setInterval(() => {
+  const loop = () => {
     const foods = data.value?.recipes || []
+    if (!foods.length)
+      return
     const randomFood = foods[Math.floor(Math.random() * foods.length)]
     currentFood.value = randomFood
     createFloatingText(replaceText(randomFood?.name))
-  }, 100) as unknown as number
+
+    // 每100ms递归调用
+    randomTimer = setTimeout(loop, 100)
+  }
+
+  loop()
 }
 
-// 停止随机
 function stopRandom() {
-  clearInterval(window.randomInterval)
   shakeTitle.value = false
+  if (randomTimer)
+    clearTimeout(randomTimer)
+  randomTimer = null
 }
 
-// 创建浮动文字
-function createFloatingText(text?: string) {
+function createFloatingText(text = '') {
   const container = document.getElementById('temp_container')
   if (!container)
     return
 
   const temp = document.createElement('div')
-  temp.className = 'temp absolute text-gray-500 animate-flash whitespace-nowrap'
-  temp.textContent = text || ''
+  const colors = [
+    'rgba(156, 163, 175, 0.8)',
+    'rgba(209, 213, 219, 0.8)',
+    'rgba(243, 244, 246, 0.9)',
+    'rgba(200, 200, 200, 0.7)',
+  ]
+  const sizes = ['0.8rem', '1rem', '1.2rem']
+  const rotate = (Math.random() - 0.5) * 20
 
-  // 随机位置
-  const left = Math.random() * 100
-  const top = Math.random() * 100
-
-  temp.style.left = `${left}%`
-  temp.style.top = `${top}%`
+  temp.textContent = text
+  temp.className = 'absolute font-medium animate-float-up select-none whitespace-nowrap'
+  temp.style.color = colors[Math.floor(Math.random() * colors.length)]!
+  temp.style.fontSize = sizes[Math.floor(Math.random() * sizes.length)]!
+  temp.style.left = `${Math.random() * 80 + 10}%`
+  temp.style.top = `${Math.random() * 80 + 10}%`
+  temp.style.transform = `rotate(${rotate}deg)`
+  temp.style.filter = 'blur(0.5px)'
+  temp.style.textShadow = '0 0 4px rgba(255,255,255,0.4)'
 
   container.appendChild(temp)
-
-  // 动画结束后移除
-  setTimeout(() => {
-    temp.remove()
-  }, 1600)
+  setTimeout(() => temp.remove(), 1600)
 }
 
-// 扩展Window类型以支持自定义属性
-declare global {
-  interface Window {
-    randomInterval: number | undefined
-  }
-}
+// ✅ 组件卸载时安全清理
+onUnmounted(() => {
+  if (randomTimer)
+    clearTimeout(randomTimer)
+})
 </script>
 
 <template>
+  <FluidCursor v-if="isPC()" />
   <div class="bg-[#E9E9E9] min-h-screen relative overflow-hidden">
     <Header />
-    <!-- 背景 -->
     <div
-      class="bg-[#E9E9E9] bg-[url('/pic/bg.png')] transition-all inset-0 absolute z-0 bg-center"
-      :class="{ 'animate-paused': isPlaying }"
-      :style="{ animation: `flow 16s linear infinite` }"
+      class="bg-[#E9E9E9] bg-[url('/pic/bg2.png')] transition-all inset-0 absolute z-0 bg-center"
+      :class="{ 'animate-paused': isPlaying }" :style="{ animation: `flow 16s linear infinite` }"
     />
 
-    <!-- 浮动文字容器 -->
     <div id="temp_container" class="inset-0 absolute z-10 overflow-hidden" />
 
-    <!-- 主要内容 -->
     <div class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
       <div class="text-center w-full -mt-20">
         <h1
@@ -98,20 +101,12 @@ declare global {
         >
           <span class="today">今天</span>
           <span class="eat">吃</span>
-          <FoodItem
-            :current-food="currentFood"
-          />
+          <FoodItem :current-food="currentFood" />
           <span class="punctuation">？</span>
         </h1>
 
-        <button
-          id="start"
-          class="outline-none cursor-pointer"
-          @click="togglePlay"
-        >
-          <FancyButton
-            :text="isPlaying ? '停止' : '开始'"
-          />
+        <button id="start" class="outline-none cursor-pointer" @click="togglePlay">
+          <FancyButton :text="isPlaying ? '停止' : '开始'" />
         </button>
       </div>
     </div>
@@ -124,18 +119,23 @@ declare global {
   0% {
     transform: translateX(5px);
   }
+
   20% {
     transform: translateX(-10px);
   }
+
   40% {
     transform: translateX(15px);
   }
+
   60% {
     transform: translateX(-20px);
   }
+
   80% {
     transform: translateX(15px);
   }
+
   100% {
     transform: translateX(-10px);
   }
@@ -146,8 +146,8 @@ declare global {
     background-position: 50% 0;
   }
   100% {
-    background-position: 50% -250px;
-  }
+    background-position: 50% -512px;
+  } /* 半张图高度 */
 }
 
 @keyframes flash {
@@ -157,9 +157,11 @@ declare global {
     color: transparent;
     text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
   }
+
   50% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
     transform: scale(0.5);
@@ -172,11 +174,43 @@ declare global {
     opacity: 0;
     transform: perspective(600px) translate3d(-50%, 7px, 0) scale(0.7) rotateY(180deg);
   }
+
   20%,
   80% {
     opacity: 1;
     transform: perspective(600px) translate3d(-50%, 0, 0) rotateY(0deg);
   }
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.9);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  80% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1.02);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-30px) scale(1.1);
+  }
+}
+
+.animate-float-up {
+  animation: floatUp 1.6s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+.text-glow {
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
 }
 
 .animate-shake {
