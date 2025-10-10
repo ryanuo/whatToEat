@@ -146,7 +146,7 @@ onUnmounted(() => {
     background-position: 50% 0;
   }
   100% {
-    background-position: 50% -512px;
+    background-position: 50% -500px;
   } /* 半张图高度 */
 }
 
