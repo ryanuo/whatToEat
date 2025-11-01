@@ -7,6 +7,9 @@ export default antfu(
     unocss: true,
     formatters: true,
     pnpm: true,
+    ignores: [
+      'public/recipes.json',
+    ],
   },
 )
   .append(nuxt())
