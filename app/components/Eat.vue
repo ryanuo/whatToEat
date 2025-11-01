@@ -1,10 +1,58 @@
 <script setup lang="ts">
 import type { CurrentFood, RecipeResponse } from '~/types'
+import { useStorage } from '@vueuse/core'
+import { emojiMap } from '~/constants'
 
 const isPlaying = ref(false)
 const currentFood = ref<CurrentFood>()
 const shakeTitle = ref(false)
 const { data } = await useFetch<RecipeResponse>('/api/recipes')
+const categories = computed(() => (data.value?.categories || []) as string[])
+const selectedCategories = useStorage<string[]>('selected-categories', [...categories.value])
+const isAllSelected = computed(() => selectedCategories.value.length === categories.value.length)
+
+// 首次加载 categories 时默认选中全部具体分类
+const stopWatchCategories = watch(categories, (newVal) => {
+  if (newVal && newVal.length) {
+    // 默认选中所有具体分类
+    selectedCategories.value = [...newVal]
+    // 初始化完成后停止监听
+    stopWatchCategories()
+  }
+})
+
+// 颜色配置数组
+const colorClasses = [
+  { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-400', active: 'bg-blue-500', activeText: 'text-white', activeBorder: 'border-blue-600' },
+  { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-400', active: 'bg-red-500', activeText: 'text-white', activeBorder: 'border-red-600' },
+  { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-400', active: 'bg-green-500', activeText: 'text-white', activeBorder: 'border-green-600' },
+  { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300', active: 'bg-yellow-500', activeText: 'text-white', activeBorder: 'border-yellow-600' },
+  { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-400', active: 'bg-indigo-500', activeText: 'text-white', activeBorder: 'border-indigo-600' },
+  { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-400', active: 'bg-purple-500', activeText: 'text-white', activeBorder: 'border-purple-600' },
+  { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-400', active: 'bg-pink-500', activeText: 'text-white', activeBorder: 'border-pink-600' },
+  { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-500', active: 'bg-gray-600', activeText: 'text-white', activeBorder: 'border-gray-700' },
+]
+
+const allColorClass = { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-400', active: 'bg-orange-500', activeText: 'text-white', activeBorder: 'border-orange-600' }
+
+// 获取标签的emoji
+function getEmoji(tag: string) {
+  return emojiMap[tag] || ''
+}
+
+// 获取标签的颜色类
+function getTagColorClasses(index: number, isActive: boolean) {
+  const colorConfig
+    = index === -1
+      ? allColorClass
+      : colorClasses[index % colorClasses.length]!
+
+  const { bg, text, border, active, activeText, activeBorder } = colorConfig
+
+  return isActive
+    ? `${active} ${activeText} ${activeBorder}`
+    : `${bg} ${text} ${border}`
+}
 
 let randomTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -25,10 +73,12 @@ function startRandom() {
   shakeTitle.value = true
 
   const loop = () => {
-    const foods = data.value?.recipes || []
-    if (!foods.length)
-      return
-    const randomFood = foods[Math.floor(Math.random() * foods.length)]
+    const allFoods = data.value?.recipes || []
+    const foods = selectedCategories.value.length > 0
+      ? allFoods.filter(r => selectedCategories.value.includes(r.category))
+      : allFoods
+    const list = foods.length ? foods : allFoods
+    const randomFood = list[Math.floor(Math.random() * list.length)]
     currentFood.value = randomFood
     createFloatingText(replaceText(randomFood?.name))
 
@@ -44,6 +94,28 @@ function stopRandom() {
   if (randomTimer)
     clearTimeout(randomTimer)
   randomTimer = null
+}
+
+function toggleTag(tag: string) {
+  if (tag === 'all') {
+    if (!isAllSelected.value)
+      selectedCategories.value = [...categories.value]
+    else
+      selectedCategories.value = [categories.value[1]!]
+    return
+  }
+
+  const set = selectedCategories.value
+  const idx = set.indexOf(tag)
+
+  if (idx === -1)
+    set.push(tag)
+  else
+    set.splice(idx, 1)
+
+  // 如果空选，则默认选中第一个（一般是 'all'）
+  if (set.length === 0 && categories.value.length)
+    selectedCategories.value = [categories.value[1]!]
 }
 
 function createFloatingText(text = '') {
@@ -94,6 +166,28 @@ onUnmounted(() => {
     <div id="temp_container" class="inset-0 absolute z-10 overflow-hidden" />
 
     <div class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
+      <div class="mb-4 flex flex-wrap gap-3 items-center top-20 justify-center absolute">
+        <div class="flex flex-wrap gap-2 justify-center">
+          <button
+            key="all"
+            type="button"
+            class="text-xs font-medium px-2.5 py-0.5 border rounded-sm inline-flex gap-1 cursor-pointer select-none transition-all items-center"
+            :class="getTagColorClasses(-1, isAllSelected)" @click="toggleTag('all')"
+          >
+            <span>全部</span>
+            <span :class="isAllSelected ? 'i-carbon-checkmark font-bold' : ''" />
+          </button>
+          <button
+            v-for="(c, index) in categories" :key="c" type="button"
+            class="text-xs font-medium px-2.5 py-0.5 border rounded-sm inline-flex gap-1 cursor-pointer select-none transition-all items-center"
+            :class="getTagColorClasses(index, selectedCategories.includes(c))" @click="toggleTag(c)"
+          >
+            <span v-if="getEmoji(c)">{{ getEmoji(c) }}</span>
+            {{ c }}
+            <span :class="selectedCategories.includes(c) ? 'i-carbon-checkmark font-bold' : ''" />
+          </button>
+        </div>
+      </div>
       <div class="text-center w-full -mt-20">
         <h1
           class="text-[clamp(2rem,5vw,3rem)] text-gray-800 font-normal mb-6 whitespace-nowrap text-ellipsis overflow-hidden"
@@ -145,9 +239,12 @@ onUnmounted(() => {
   0% {
     background-position: 50% 0;
   }
+
   100% {
     background-position: 50% -500px;
-  } /* 半张图高度 */
+  }
+
+  /* 半张图高度 */
 }
 
 @keyframes flash {
