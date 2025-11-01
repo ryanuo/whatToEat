@@ -35,7 +35,7 @@ def clean_data(data):
                     title, path = match.groups()
                     recipes.append({
                         "name": title,
-                        "cate": tag,
+                        "category": tag,
                         "link": path.replace('.md',''),
                         "source_path": path,
                     })
