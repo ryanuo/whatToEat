@@ -1,18 +1,16 @@
 // server/api/recipes.ts
 import type { Recipe } from '~/types'
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import process from 'node:process'
 
-const RECIPES_URL = 'https://eat.ryanuo.cc/recipes.json'
+const LOCAL_RECIPES_PATH = join(process.cwd(), 'public/recipes.json')
 
 // 获取远程菜谱
 async function fetchRecipes(): Promise<Recipe[]> {
   try {
-    const response = await $fetch<Recipe[]>(RECIPES_URL, {
-      timeout: 150000,
-    })
-
-    if (typeof response === 'string')
-      return JSON.parse(response) as Recipe[]
-    return response
+    const data = await readFile(LOCAL_RECIPES_PATH, 'utf-8')
+    return JSON.parse(data) as Recipe[]
   }
   catch (error) {
     console.error('获取远程菜谱数据失败:', error)
