@@ -27,7 +27,7 @@ jobs:
 
       - name: Run Crawl Script
         run: |
-          python crawl.py
+          python scripts/crawl.py
 
       - name: Commit and Push Generated Recipe Data
         uses: stefanzweifel/git-auto-commit-action@v5
