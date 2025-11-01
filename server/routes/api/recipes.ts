@@ -1,7 +1,7 @@
 // server/api/recipes.ts
 import type { Recipe } from '~/types'
 
-const RECIPES_URL = 'https://gh-proxy.com/https://gist.githubusercontent.com/ryanuo7/f64ca9dcd3996ce4bee44a2841a155b9/raw/ed144efedf89b36938f84a1d56d1ae4fca616167/food.json'
+const RECIPES_URL = 'https://eat.ryanuo.cc/recipes.json'
 
 // 获取远程菜谱
 async function fetchRecipes(): Promise<Recipe[]> {
