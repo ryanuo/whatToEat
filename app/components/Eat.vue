@@ -23,29 +23,33 @@ const stopWatchCategories = watch(categories, (newVal) => {
 
 // 颜色配置数组
 const colorClasses = [
-  { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-400', active: 'bg-blue-500', activeText: 'text-white', activeBorder: 'border-blue-600' },
-  { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-400', active: 'bg-red-500', activeText: 'text-white', activeBorder: 'border-red-600' },
-  { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-400', active: 'bg-green-500', activeText: 'text-white', activeBorder: 'border-green-600' },
-  { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300', active: 'bg-yellow-500', activeText: 'text-white', activeBorder: 'border-yellow-600' },
-  { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-400', active: 'bg-indigo-500', activeText: 'text-white', activeBorder: 'border-indigo-600' },
-  { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-400', active: 'bg-purple-500', activeText: 'text-white', activeBorder: 'border-purple-600' },
-  { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-400', active: 'bg-pink-500', activeText: 'text-white', activeBorder: 'border-pink-600' },
-  { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-500', active: 'bg-gray-600', activeText: 'text-white', activeBorder: 'border-gray-700' },
+  { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-400', active: 'bg-blue-400', activeText: 'text-white', activeBorder: 'border-blue-500' },
+  { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-400', active: 'bg-red-400', activeText: 'text-white', activeBorder: 'border-red-500' },
+  { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-400', active: 'bg-green-400', activeText: 'text-white', activeBorder: 'border-green-500' },
+  { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300', active: 'bg-yellow-400', activeText: 'text-white', activeBorder: 'border-yellow-500' },
+  { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-400', active: 'bg-indigo-400', activeText: 'text-white', activeBorder: 'border-indigo-500' },
+  { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-400', active: 'bg-purple-400', activeText: 'text-white', activeBorder: 'border-purple-500' },
+  { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-400', active: 'bg-pink-400', activeText: 'text-white', activeBorder: 'border-pink-500' },
+  { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-500', active: 'bg-gray-500', activeText: 'text-white', activeBorder: 'border-gray-600' },
+  { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-400', active: 'bg-orange-400', activeText: 'text-white', activeBorder: 'border-orange-500' },
 ]
-
-const allColorClass = { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-400', active: 'bg-orange-500', activeText: 'text-white', activeBorder: 'border-orange-600' }
 
 // 获取标签的emoji
 function getEmoji(tag: string) {
   return emojiMap[tag] || ''
 }
 
+// const randomIndex = computed(() => {
+//   return Math.floor(Math.random() * colorClasses.length)
+// })
+
 // 获取标签的颜色类
 function getTagColorClasses(index: number, isActive: boolean) {
-  const colorConfig
-    = index === -1
-      ? allColorClass
-      : colorClasses[index % colorClasses.length]!
+  // const colorConfig
+  //   = index === -1
+  //     ? colorClasses[colorClasses.length - 2]!
+  //     : colorClasses[randomIndex.value]!
+  const colorConfig = colorClasses[colorClasses.length - 2]!
 
   const { bg, text, border, active, activeText, activeBorder } = colorConfig
 
@@ -67,7 +71,7 @@ function togglePlay() {
 // ✅ 改用递归随机器
 function startRandom() {
   if (!import.meta.client)
-    return // ✅ 防止 SSR 阶段执行
+    return
 
   currentFood.value = undefined
   shakeTitle.value = true
@@ -82,7 +86,6 @@ function startRandom() {
     currentFood.value = randomFood
     createFloatingText(replaceText(randomFood?.name))
 
-    // 每100ms递归调用
     randomTimer = setTimeout(loop, 100)
   }
 
@@ -147,7 +150,6 @@ function createFloatingText(text = '') {
   setTimeout(() => temp.remove(), 1600)
 }
 
-// ✅ 组件卸载时安全清理
 onUnmounted(() => {
   if (randomTimer)
     clearTimeout(randomTimer)
@@ -166,7 +168,7 @@ onUnmounted(() => {
     <div id="temp_container" class="inset-0 absolute z-10 overflow-hidden" />
 
     <div class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
-      <div class="mb-4 flex flex-wrap gap-3 items-center top-20 justify-center absolute">
+      <div class="mb-4 flex flex-wrap gap-3 items-center top-15 justify-center absolute">
         <div class="flex flex-wrap gap-2 justify-center">
           <button
             key="all"
@@ -175,7 +177,6 @@ onUnmounted(() => {
             :class="getTagColorClasses(-1, isAllSelected)" @click="toggleTag('all')"
           >
             <span>全部</span>
-            <span :class="isAllSelected ? 'i-carbon-checkmark font-bold' : ''" />
           </button>
           <button
             v-for="(c, index) in categories" :key="c" type="button"
@@ -184,7 +185,6 @@ onUnmounted(() => {
           >
             <span v-if="getEmoji(c)">{{ getEmoji(c) }}</span>
             {{ c }}
-            <span :class="selectedCategories.includes(c) ? 'i-carbon-checkmark font-bold' : ''" />
           </button>
         </div>
       </div>
