@@ -10,6 +10,7 @@ const { data } = await useFetch<RecipeResponse>('/api/recipes')
 const categories = computed(() => (data.value?.categories || []) as string[])
 const selectedCategories = useStorage<string[]>('selected-categories', [...categories.value])
 const isAllSelected = computed(() => selectedCategories.value.length === categories.value.length)
+const { playAnimation } = useEmojiAnimation()
 
 // 首次加载 categories 时默认选中全部具体分类
 const stopWatchCategories = watch(categories, (newVal) => {
@@ -111,10 +112,13 @@ function toggleTag(tag: string) {
   const set = selectedCategories.value
   const idx = set.indexOf(tag)
 
-  if (idx === -1)
+  if (idx === -1) {
+    playAnimation(getEmoji(tag))
     set.push(tag)
-  else
+  }
+  else {
     set.splice(idx, 1)
+  }
 
   // 如果空选，则默认选中第一个（一般是 'all'）
   if (set.length === 0 && categories.value.length)
