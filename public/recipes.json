@@ -1314,6 +1314,12 @@
     "source_path": "dishes/staple/韭菜盒子.md"
   },
   {
+    "name": "可乐炒饭",
+    "category": "主食",
+    "link": "dishes/staple/可乐炒饭",
+    "source_path": "dishes/staple/可乐炒饭.md"
+  },
+  {
     "name": "空气炸锅照烧鸡饭",
     "category": "主食",
     "link": "dishes/staple/空气炸锅照烧鸡饭/空气炸锅照烧鸡饭",
@@ -1450,6 +1456,12 @@
     "category": "主食",
     "link": "dishes/staple/西红柿鸡蛋挂面/西红柿鸡蛋挂面",
     "source_path": "dishes/staple/西红柿鸡蛋挂面/西红柿鸡蛋挂面.md"
+  },
+  {
+    "name": "鲜肉烧卖",
+    "category": "主食",
+    "link": "dishes/staple/鲜肉烧卖",
+    "source_path": "dishes/staple/鲜肉烧卖.md"
   },
   {
     "name": "扬州炒饭",
