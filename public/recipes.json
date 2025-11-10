@@ -210,6 +210,12 @@
     "source_path": "dishes/vegetable_dish/凉拌油麦菜.md"
   },
   {
+    "name": "皮蛋豆腐",
+    "category": "素菜",
+    "link": "dishes/vegetable_dish/皮蛋豆腐",
+    "source_path": "dishes/vegetable_dish/皮蛋豆腐.md"
+  },
+  {
     "name": "蒲烧茄子",
     "category": "素菜",
     "link": "dishes/vegetable_dish/蒲烧茄子",
@@ -1018,6 +1024,12 @@
     "category": "水产",
     "link": "dishes/aquatic/清蒸生蚝",
     "source_path": "dishes/aquatic/清蒸生蚝.md"
+  },
+  {
+    "name": "肉蟹煲",
+    "category": "水产",
+    "link": "dishes/aquatic/肉蟹煲",
+    "source_path": "dishes/aquatic/肉蟹煲.md"
   },
   {
     "name": "水煮鱼",
