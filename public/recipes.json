@@ -1188,6 +1188,12 @@
     "source_path": "dishes/breakfast/微波炉荷包蛋.md"
   },
   {
+    "name": "微波炉蒸蛋",
+    "category": "早餐",
+    "link": "dishes/breakfast/微波炉蒸蛋",
+    "source_path": "dishes/breakfast/微波炉蒸蛋.md"
+  },
+  {
     "name": "温泉蛋",
     "category": "早餐",
     "link": "dishes/breakfast/温泉蛋/温泉蛋",
