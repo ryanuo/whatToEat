@@ -138,6 +138,12 @@
     "source_path": "dishes/vegetable_dish/茄子炖土豆.md"
   },
   {
+    "name": "家常日本豆腐",
+    "category": "素菜",
+    "link": "dishes/vegetable_dish/家常日本豆腐",
+    "source_path": "dishes/vegetable_dish/家常日本豆腐.md"
+  },
+  {
     "name": "椒盐玉米",
     "category": "素菜",
     "link": "dishes/vegetable_dish/椒盐玉米/椒盐玉米",
@@ -354,6 +360,12 @@
     "source_path": "dishes/meat_dish/白菜猪肉炖粉条.md"
   },
   {
+    "name": "豉汁排骨",
+    "category": "荤菜",
+    "link": "dishes/meat_dish/豉汁排骨",
+    "source_path": "dishes/meat_dish/豉汁排骨.md"
+  },
+  {
     "name": "豉汁蒸白鱔",
     "category": "荤菜",
     "link": "dishes/meat_dish/豉汁蒸白鱔/豉汁蒸白鱔",
@@ -388,6 +400,12 @@
     "category": "荤菜",
     "link": "dishes/meat_dish/粉蒸肉",
     "source_path": "dishes/meat_dish/粉蒸肉.md"
+  },
+  {
+    "name": "腐乳肉",
+    "category": "荤菜",
+    "link": "dishes/meat_dish/腐乳肉",
+    "source_path": "dishes/meat_dish/腐乳肉.md"
   },
   {
     "name": "干煸仔鸡",
@@ -996,6 +1014,12 @@
     "source_path": "dishes/aquatic/混合烤鱼/烤鱼.md"
   },
   {
+    "name": "酱炖蟹",
+    "category": "水产",
+    "link": "dishes/aquatic/酱炖蟹",
+    "source_path": "dishes/aquatic/酱炖蟹.md"
+  },
+  {
     "name": "芥末黄油罗氏虾",
     "category": "水产",
     "link": "dishes/aquatic/芥末黄油罗氏虾/芥末黄油罗氏虾",
@@ -1500,6 +1524,12 @@
     "source_path": "dishes/staple/炸酱面.md"
   },
   {
+    "name": "照烧鸡腿饭",
+    "category": "主食",
+    "link": "dishes/staple/照烧鸡腿饭",
+    "source_path": "dishes/staple/照烧鸡腿饭.md"
+  },
+  {
     "name": "蒸卤面",
     "category": "主食",
     "link": "dishes/staple/蒸卤面",
@@ -1510,6 +1540,12 @@
     "category": "主食",
     "link": "dishes/staple/中式馅饼/中式馅饼",
     "source_path": "dishes/staple/中式馅饼/中式馅饼.md"
+  },
+  {
+    "name": "猪油拌饭",
+    "category": "主食",
+    "link": "dishes/staple/猪油拌饭",
+    "source_path": "dishes/staple/猪油拌饭.md"
   },
   {
     "name": "煮泡面加蛋",
@@ -1606,6 +1642,12 @@
     "category": "汤与粥",
     "link": "dishes/soup/勾芡香菇汤/勾芡香菇汤",
     "source_path": "dishes/soup/勾芡香菇汤/勾芡香菇汤.md"
+  },
+  {
+    "name": "黄瓜皮蛋汤",
+    "category": "汤与粥",
+    "link": "dishes/soup/黄瓜皮蛋汤",
+    "source_path": "dishes/soup/黄瓜皮蛋汤.md"
   },
   {
     "name": "金针菇汤",
