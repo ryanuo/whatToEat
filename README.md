@@ -60,8 +60,6 @@ pnpm preview
 
 默认使用公开菜单（与原项目一致）：`https://eat.ryanuo.cc/recipes.json`。
 
-如需部署到你自己的本地菜单/菜谱服务，启动时传入环境变量 `RECIPES_URL`（支持 base URL 或完整 `recipes.json` URL）。
-
 ```bash
 docker compose up -d --build
 ```
@@ -77,22 +75,12 @@ docker pull ghcr.io/ryanuo/whattoeat:latest
 
 docker run -d --name whattoeat \
 	-p 3000:3000 \
-	-e RECIPES_URL=http://your-recipes-host:5000 \
 	ghcr.io/ryanuo/whattoeat:latest
-```
-
-不设置 `RECIPES_URL` 时会使用默认公开菜单。
-
-使用你自己的菜单：
-
-```bash
-RECIPES_URL=http://your-recipes-host:5000 docker compose up -d --build
-# 或者：RECIPES_URL=http://your-recipes-host:5000/recipes.json docker compose up -d --build
 ```
 
 ## 数据来源
 
-菜谱数据来源于远程 JSON 接口，通过 `server/api/recipes.ts` 进行获取和处理。
+菜谱数据来源于远程 JSON 接口，通过 `server/routes/api/recipes.ts` 进行获取和处理。
 
 ## 参考
 
