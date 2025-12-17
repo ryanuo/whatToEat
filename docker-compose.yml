@@ -1,0 +1,15 @@
+services:
+  whattoeat:
+    build: .
+    container_name: whattoeat
+    ports:
+      - "3000:3000"
+    environment:
+      # 可选：指向你自己的菜谱服务（支持 base URL 或完整 recipes.json URL）
+      # - RECIPES_URL=http://your-recipes-host:5000
+      # - RECIPES_URL=http://your-recipes-host:5000/recipes.json
+      - RECIPES_URL=${RECIPES_URL:-}
+      # 容器内监听地址（Docker 环境建议显式设置）
+      - NITRO_HOST=0.0.0.0
+      - NITRO_PORT=3000
+    restart: unless-stopped

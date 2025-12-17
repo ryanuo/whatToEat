@@ -1,6 +1,7 @@
 FROM node:20-alpine AS build-stage
 
 WORKDIR /app
+
 RUN corepack enable
 
 COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -14,6 +15,12 @@ RUN pnpm build
 FROM node:20-alpine AS production-stage
 
 WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NITRO_HOST=0.0.0.0
+ENV NITRO_PORT=3000
+
+LABEL org.opencontainers.image.source="https://github.com/ryanuo/whatToEat"
 
 COPY --from=build-stage /app/.output ./.output
 
