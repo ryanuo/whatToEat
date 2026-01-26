@@ -450,6 +450,12 @@
     "source_path": "dishes/meat_dish/黑椒牛柳/黑椒牛柳.md"
   },
   {
+    "name": "红烧鸡翅",
+    "category": "荤菜",
+    "link": "dishes/meat_dish/红烧鸡翅",
+    "source_path": "dishes/meat_dish/红烧鸡翅.md"
+  },
+  {
     "name": "简易红烧肉",
     "category": "荤菜",
     "link": "dishes/meat_dish/红烧肉/简易红烧肉",
