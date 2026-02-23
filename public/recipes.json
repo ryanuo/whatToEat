@@ -342,6 +342,18 @@
     "source_path": "dishes/vegetable_dish/洋葱炒鸡蛋/洋葱炒鸡蛋.md"
   },
   {
+    "name": "印度葫芦丸子",
+    "category": "素菜",
+    "link": "dishes/vegetable_dish/印度葫芦丸子",
+    "source_path": "dishes/vegetable_dish/印度葫芦丸子.md"
+  },
+  {
+    "name": "印度土豆花菜",
+    "category": "素菜",
+    "link": "dishes/vegetable_dish/印度土豆花菜",
+    "source_path": "dishes/vegetable_dish/印度土豆花菜.md"
+  },
+  {
     "name": "油醋爆蛋",
     "category": "素菜",
     "link": "dishes/vegetable_dish/油醋爆蛋",
@@ -496,6 +508,12 @@
     "category": "荤菜",
     "link": "dishes/meat_dish/黄焖鸡",
     "source_path": "dishes/meat_dish/黄焖鸡.md"
+  },
+  {
+    "name": "黄油鸡",
+    "category": "荤菜",
+    "link": "dishes/meat_dish/黄油鸡",
+    "source_path": "dishes/meat_dish/黄油鸡.md"
   },
   {
     "name": "徽派红烧肉",
@@ -1332,6 +1350,12 @@
     "source_path": "dishes/staple/河南蒸面条/河南蒸面条.md"
   },
   {
+    "name": "红芸豆拌饭",
+    "category": "主食",
+    "link": "dishes/staple/红芸豆拌饭",
+    "source_path": "dishes/staple/红芸豆拌饭.md"
+  },
+  {
     "name": "火腿饭团",
     "category": "主食",
     "link": "dishes/staple/火腿饭团/火腿饭团",
@@ -1402,6 +1426,12 @@
     "category": "主食",
     "link": "dishes/staple/烙饼/烙饼",
     "source_path": "dishes/staple/烙饼/烙饼.md"
+  },
+  {
+    "name": "利提巧卡",
+    "category": "主食",
+    "link": "dishes/staple/利提巧卡",
+    "source_path": "dishes/staple/利提巧卡.md"
   },
   {
     "name": "凉粉",
@@ -1534,6 +1564,24 @@
     "category": "主食",
     "link": "dishes/staple/意式肉酱面/意式肉酱面",
     "source_path": "dishes/staple/意式肉酱面/意式肉酱面.md"
+  },
+  {
+    "name": "印度烤饼",
+    "category": "主食",
+    "link": "dishes/staple/印度烤饼",
+    "source_path": "dishes/staple/印度烤饼.md"
+  },
+  {
+    "name": "印度焖饭",
+    "category": "主食",
+    "link": "dishes/staple/印度焖饭",
+    "source_path": "dishes/staple/印度焖饭.md"
+  },
+  {
+    "name": "鹰嘴豆炸饼",
+    "category": "主食",
+    "link": "dishes/staple/鹰嘴豆炸饼",
+    "source_path": "dishes/staple/鹰嘴豆炸饼.md"
   },
   {
     "name": "炸酱面",
@@ -1872,6 +1920,12 @@
     "source_path": "dishes/drink/杨枝甘露.md"
   },
   {
+    "name": "印度奶茶",
+    "category": "饮料",
+    "link": "dishes/drink/印度奶茶",
+    "source_path": "dishes/drink/印度奶茶.md"
+  },
+  {
     "name": "长岛冰茶",
     "category": "饮料",
     "link": "dishes/drink/长岛冰茶",
@@ -1972,6 +2026,12 @@
     "category": "甜品",
     "link": "dishes/dessert/红柚蛋糕/红柚蛋糕",
     "source_path": "dishes/dessert/红柚蛋糕/红柚蛋糕.md"
+  },
+  {
+    "name": "胡萝卜甜糕",
+    "category": "甜品",
+    "link": "dishes/dessert/胡萝卜甜糕",
+    "source_path": "dishes/dessert/胡萝卜甜糕.md"
   },
   {
     "name": "咖啡椰奶冻",
