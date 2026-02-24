@@ -1,17 +1,34 @@
-// server/api/recipes.ts
 import type { Recipe } from '~/types'
 
-// 获取远程菜谱
+// 获取菜谱：统一使用默认公开菜单
 async function fetchRecipes(): Promise<Recipe[]> {
-  try {
-    const baseURL = import.meta.dev ? 'http://localhost:3000' : 'https://eat.ryanuo.cc'
-    const recipes = await $fetch<Recipe[]>(`${baseURL}/recipes.json`)
-    return recipes as Recipe[]
+  const maxRetries = 3
+  const retryDelay = 1000
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const recipes = await $fetch<Recipe[]>('https://eat.ryanuo.cc/recipes.json', {
+        timeout: 10000, // 10秒超时
+      })
+      
+      if (!recipes || !Array.isArray(recipes)) {
+        throw new Error('返回的数据格式不正确')
+      }
+      
+      console.log(`成功获取 ${recipes.length} 条菜谱数据`)
+      return recipes as Recipe[]
+    }
+    catch (error) {
+      console.error(`获取菜谱数据失败 (尝试 ${i + 1}/${maxRetries}):`, error)
+      
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay))
+      }
+    }
   }
-  catch (error) {
-    console.error('获取远程菜谱数据失败:', error)
-    return []
-  }
+  
+  console.error('所有重试都失败，返回空数组')
+  return []
 }
 
 // 获取所有分类

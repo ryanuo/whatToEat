@@ -6,7 +6,17 @@ import { emojiMap } from '~/constants'
 const isPlaying = ref(false)
 const currentFood = ref<CurrentFood>()
 const shakeTitle = ref(false)
-const { data } = await useFetch<RecipeResponse>('/api/recipes')
+const { data, error, pending, refresh } = await useFetch<RecipeResponse>('/api/recipes', {
+  retry: 3,
+  retryDelay: 1000,
+  timeout: 10000,
+})
+
+// 检查数据是否成功加载
+const isDataReady = computed(() => {
+  return !pending.value && !error.value && data.value && data.value.recipes && data.value.recipes.length > 0
+})
+
 const categories = computed(() => (data.value?.categories || []) as string[])
 const selectedCategories = useStorage<string[]>('selected-categories', [...categories.value])
 const isAllSelected = computed(() => selectedCategories.value.length === categories.value.length)
@@ -73,6 +83,12 @@ function togglePlay() {
 function startRandom() {
   if (!import.meta.client)
     return
+
+  // 确保数据已加载
+  if (!data.value?.recipes || data.value.recipes.length === 0) {
+    console.warn('菜单数据未加载，无法开始随机')
+    return
+  }
 
   currentFood.value = undefined
   shakeTitle.value = true
@@ -171,7 +187,43 @@ onUnmounted(() => {
 
     <div id="temp_container" class="inset-0 absolute z-10 overflow-hidden" />
 
-    <div class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
+    <!-- 加载状态 -->
+    <div v-if="pending" class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
+      <div class="text-center">
+        <Loading />
+        <p class="text-gray-600 mt-4 animate-pulse">正在加载菜单数据...</p>
+      </div>
+    </div>
+
+    <!-- 错误状态 -->
+    <div v-else-if="error" class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
+      <div class="text-center">
+        <p class="text-red-600 mb-4">😞 菜单数据加载失败</p>
+        <p class="text-gray-600 text-sm mb-4">{{ error.message }}</p>
+        <button
+          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          @click="refresh"
+        >
+          重新加载
+        </button>
+      </div>
+    </div>
+
+    <!-- 数据为空状态 -->
+    <div v-else-if="!isDataReady" class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
+      <div class="text-center">
+        <p class="text-gray-600 mb-4">📭 暂无菜单数据</p>
+        <button
+          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          @click="refresh"
+        >
+          重新加载
+        </button>
+      </div>
+    </div>
+
+    <!-- 正常内容显示 -->
+    <div v-else class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
       <div class="mb-4 flex flex-wrap gap-3 items-center top-15 justify-center absolute">
         <div class="flex flex-wrap gap-2 justify-center">
           <button
