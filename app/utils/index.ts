@@ -2,11 +2,11 @@ export function replaceText(text?: string) {
   return text?.replace('的做法', '') || '神马'
 }
 
-export function getOriginRecipeLink(source_path?: string) {
-  if (!source_path)
+export function getOriginRecipeLink(name?: string) {
+  if (!name)
     return ''
 
-  return `https://cook.aiursoft.com/${source_path?.replace('.md', '')}`
+  return `https://howtocook.aiursoft.com/Dashboard?q=${name}`
 }
 
 // 是否为pc端
