@@ -56,8 +56,8 @@
   {
     "name": "地三鲜",
     "category": "素菜",
-    "link": "dishes/vegetable_dish/地三鲜",
-    "source_path": "dishes/vegetable_dish/地三鲜.md"
+    "link": "dishes/vegetable_dish/地三鲜/地三鲜",
+    "source_path": "dishes/vegetable_dish/地三鲜/地三鲜.md"
   },
   {
     "name": "干锅花菜",
@@ -456,6 +456,12 @@
     "source_path": "dishes/meat_dish/贵州辣子鸡/贵州辣子鸡.md"
   },
   {
+    "name": "桂林十八酿",
+    "category": "荤菜",
+    "link": "dishes/meat_dish/桂林十八酿/桂林十八酿",
+    "source_path": "dishes/meat_dish/桂林十八酿/桂林十八酿.md"
+  },
+  {
     "name": "荷兰豆炒腊肠",
     "category": "荤菜",
     "link": "dishes/meat_dish/荷兰豆炒腊肠/荷兰豆炒腊肠",
@@ -720,6 +726,12 @@
     "source_path": "dishes/meat_dish/黔式腊肠娃娃菜/黔式腊肠娃娃菜.md"
   },
   {
+    "name": "青椒酿",
+    "category": "荤菜",
+    "link": "dishes/meat_dish/青椒酿/青椒酿",
+    "source_path": "dishes/meat_dish/青椒酿/青椒酿.md"
+  },
+  {
     "name": "青椒土豆炒肉",
     "category": "荤菜",
     "link": "dishes/meat_dish/青椒土豆炒肉/青椒土豆炒肉",
@@ -796,6 +808,12 @@
     "category": "荤菜",
     "link": "dishes/meat_dish/糖醋排骨/糖醋排骨",
     "source_path": "dishes/meat_dish/糖醋排骨/糖醋排骨.md"
+  },
+  {
+    "name": "田螺酿",
+    "category": "荤菜",
+    "link": "dishes/meat_dish/田螺酿/田螺酿",
+    "source_path": "dishes/meat_dish/田螺酿/田螺酿.md"
   },
   {
     "name": "甜辣烤全翅",
@@ -1134,6 +1152,12 @@
     "source_path": "dishes/aquatic/小龙虾/小龙虾.md"
   },
   {
+    "name": "阳朔啤酒鱼",
+    "category": "水产",
+    "link": "dishes/aquatic/阳朔啤酒鱼/阳朔啤酒鱼",
+    "source_path": "dishes/aquatic/阳朔啤酒鱼/阳朔啤酒鱼.md"
+  },
+  {
     "name": "油焖大虾",
     "category": "水产",
     "link": "dishes/aquatic/油焖大虾/油焖大虾",
@@ -1292,8 +1316,8 @@
   {
     "name": "炒方便面",
     "category": "主食",
-    "link": "dishes/staple/炒方便面",
-    "source_path": "dishes/staple/炒方便面.md"
+    "link": "dishes/staple/炒方便面/炒方便面",
+    "source_path": "dishes/staple/炒方便面/炒方便面.md"
   },
   {
     "name": "炒河粉",
