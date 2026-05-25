@@ -228,6 +228,12 @@
     "source_path": "dishes/vegetable_dish/蒲烧茄子.md"
   },
   {
+    "name": "乾隆白菜",
+    "category": "素菜",
+    "link": "dishes/vegetable_dish/乾隆白菜/乾隆白菜",
+    "source_path": "dishes/vegetable_dish/乾隆白菜/乾隆白菜.md"
+  },
+  {
     "name": "芹菜拌茶树菇",
     "category": "素菜",
     "link": "dishes/vegetable_dish/芹菜拌茶树菇/芹菜拌茶树菇",
@@ -362,8 +368,8 @@
   {
     "name": "澳门湿版免治牛肉饭",
     "category": "荤菜",
-    "link": "dishes/meat_dish/澳门湿版免治牛肉饭",
-    "source_path": "dishes/meat_dish/澳门湿版免治牛肉饭.md"
+    "link": "dishes/meat_dish/澳门湿版免治牛肉饭/澳门湿版免治牛肉饭",
+    "source_path": "dishes/meat_dish/澳门湿版免治牛肉饭/澳门湿版免治牛肉饭.md"
   },
   {
     "name": "巴基斯坦牛肉咖喱",
@@ -988,6 +994,12 @@
     "category": "荤菜",
     "link": "dishes/meat_dish/孜然牛肉",
     "source_path": "dishes/meat_dish/孜然牛肉.md"
+  },
+  {
+    "name": "淄博烧烤",
+    "category": "荤菜",
+    "link": "dishes/meat_dish/淄博烧烤/淄博烧烤",
+    "source_path": "dishes/meat_dish/淄博烧烤/淄博烧烤.md"
   },
   {
     "name": "醉排骨",
