@@ -74,8 +74,8 @@ docker compose up -d --build
 docker pull ghcr.io/ryanuo/whattoeat:latest
 
 docker run -d --name whattoeat \
-	-p 3000:3000 \
-	ghcr.io/ryanuo/whattoeat:latest
+    -p 3000:3000 \
+    ghcr.io/ryanuo/whattoeat:latest
 ```
 
 ## 数据来源
