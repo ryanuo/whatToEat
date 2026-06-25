@@ -176,18 +176,24 @@ onUnmounted(() => {
     <div v-if="pending" class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
       <div class="text-center">
         <Loading />
-        <p class="text-gray-600 mt-4 animate-pulse">正在加载菜单数据...</p>
+        <p class="text-gray-600 mt-4 animate-pulse">
+          正在加载菜单数据...
+        </p>
       </div>
     </div>
 
     <!-- 错误状态 -->
     <div v-else-if="error" class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
       <div class="text-center">
-        <p class="text-red-600 mb-4">😞 菜单数据加载失败</p>
-        <p class="text-gray-600 text-sm mb-4">{{ error.message }}</p>
+        <p class="text-red-600 mb-4">
+          😞 菜单数据加载失败
+        </p>
+        <p class="text-sm text-gray-600 mb-4">
+          {{ error.message }}
+        </p>
         <button
-          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-          @click="refresh"
+          class="text-white px-4 py-2 rounded bg-blue-500 transition-colors hover:bg-blue-600"
+          @click="() => refresh()"
         >
           重新加载
         </button>
@@ -197,10 +203,12 @@ onUnmounted(() => {
     <!-- 数据为空状态 -->
     <div v-else-if="!isDataReady" class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
       <div class="text-center">
-        <p class="text-gray-600 mb-4">📭 暂无菜单数据</p>
+        <p class="text-gray-600 mb-4">
+          📭 暂无菜单数据
+        </p>
         <button
-          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-          @click="refresh"
+          class="text-white px-4 py-2 rounded bg-blue-500 transition-colors hover:bg-blue-600"
+          @click="() => refresh()"
         >
           重新加载
         </button>
