@@ -6,7 +6,17 @@ import { emojiMap } from '~/constants'
 const isPlaying = ref(false)
 const currentFood = ref<CurrentFood>()
 const shakeTitle = ref(false)
-const { data } = await useFetch<RecipeResponse>('/api/recipes')
+const { data, error, pending, refresh } = await useFetch<RecipeResponse>('/api/recipes', {
+  retry: 3,
+  retryDelay: 1000,
+  timeout: 10000,
+})
+
+// 检查数据是否成功加载
+const isDataReady = computed(() => {
+  return !pending.value && !error.value && data.value && data.value.recipes && data.value.recipes.length > 0
+})
+
 const categories = computed(() => (data.value?.categories || []) as string[])
 const selectedCategories = useStorage<string[]>('selected-categories', [...categories.value])
 const isAllSelected = computed(() => selectedCategories.value.length === categories.value.length)
@@ -22,36 +32,20 @@ const stopWatchCategories = watch(categories, (newVal) => {
   }
 })
 
-// 颜色配置数组
-const colorClasses = [
-  { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-400', active: 'bg-blue-400', activeText: 'text-white', activeBorder: 'border-blue-500' },
-  { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-400', active: 'bg-red-400', activeText: 'text-white', activeBorder: 'border-red-500' },
-  { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-400', active: 'bg-green-400', activeText: 'text-white', activeBorder: 'border-green-500' },
-  { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300', active: 'bg-yellow-400', activeText: 'text-white', activeBorder: 'border-yellow-500' },
-  { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-400', active: 'bg-indigo-400', activeText: 'text-white', activeBorder: 'border-indigo-500' },
-  { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-400', active: 'bg-purple-400', activeText: 'text-white', activeBorder: 'border-purple-500' },
-  { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-400', active: 'bg-pink-400', activeText: 'text-white', activeBorder: 'border-pink-500' },
-  { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-500', active: 'bg-gray-500', activeText: 'text-white', activeBorder: 'border-gray-600' },
-  { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-400', active: 'bg-orange-400', activeText: 'text-white', activeBorder: 'border-orange-500' },
-]
-
 // 获取标签的emoji
 function getEmoji(tag: string) {
   return emojiMap[tag] || ''
 }
-
-// const randomIndex = computed(() => {
-//   return Math.floor(Math.random() * colorClasses.length)
-// })
-
 // 获取标签的颜色类
 function getTagColorClasses(index: number, isActive: boolean) {
-  // const colorConfig
-  //   = index === -1
-  //     ? colorClasses[colorClasses.length - 2]!
-  //     : colorClasses[randomIndex.value]!
-  const colorConfig = colorClasses[colorClasses.length - 2]!
-
+  const colorConfig = {
+    bg: 'bg-[#FEFCFA]',
+    text: 'text-[#B9B5B0]',
+    border: 'border-[#E8E4E2]',
+    active: 'bg-[#DFDCDA]',
+    activeText: 'text-[#41465E]',
+    activeBorder: 'border-[#E8E4E2]',
+  }
   const { bg, text, border, active, activeText, activeBorder } = colorConfig
 
   return isActive
@@ -73,6 +67,12 @@ function togglePlay() {
 function startRandom() {
   if (!import.meta.client)
     return
+
+  // 确保数据已加载
+  if (!data.value?.recipes || data.value.recipes.length === 0) {
+    console.warn('菜单数据未加载，无法开始随机')
+    return
+  }
 
   currentFood.value = undefined
   shakeTitle.value = true
@@ -161,30 +161,64 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <FluidCursor v-if="isPC()" />
   <div class="bg-[#E9E9E9] min-h-screen relative overflow-hidden">
+    <FluidCursor v-if="isPC()" class="absolute z-11!" />
+
     <Header />
     <div
       class="bg-[#E9E9E9] bg-[url('/pic/bg2.png')] transition-all inset-0 absolute z-0 bg-center"
       :class="{ 'animate-paused': isPlaying }" :style="{ animation: `flow 16s linear infinite` }"
     />
 
-    <div id="temp_container" class="inset-0 absolute z-10 overflow-hidden" />
+    <div id="temp_container" class="inset-0 absolute z-12 overflow-hidden" />
 
-    <div class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
+    <!-- 加载状态 -->
+    <div v-if="pending" class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
+      <div class="text-center">
+        <Loading />
+        <p class="text-gray-600 mt-4 animate-pulse">正在加载菜单数据...</p>
+      </div>
+    </div>
+
+    <!-- 错误状态 -->
+    <div v-else-if="error" class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
+      <div class="text-center">
+        <p class="text-red-600 mb-4">😞 菜单数据加载失败</p>
+        <p class="text-gray-600 text-sm mb-4">{{ error.message }}</p>
+        <button
+          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          @click="refresh"
+        >
+          重新加载
+        </button>
+      </div>
+    </div>
+
+    <!-- 数据为空状态 -->
+    <div v-else-if="!isDataReady" class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
+      <div class="text-center">
+        <p class="text-gray-600 mb-4">📭 暂无菜单数据</p>
+        <button
+          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          @click="refresh"
+        >
+          重新加载
+        </button>
+      </div>
+    </div>
+
+    <!-- 正常内容显示 -->
+    <div v-else class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
       <div class="mb-4 flex flex-wrap gap-3 items-center top-15 justify-center absolute">
         <div class="flex flex-wrap gap-2 justify-center">
           <button
-            key="all"
-            type="button"
-            class="text-xs font-medium px-2.5 py-0.5 border rounded-sm inline-flex gap-1 cursor-pointer select-none transition-all items-center"
-            :class="getTagColorClasses(-1, isAllSelected)" @click="toggleTag('all')"
+            key="all" type="button" class="btn-cate" :class="getTagColorClasses(-1, isAllSelected)"
+            @click="toggleTag('all')"
           >
-            <span>全部</span>
+            <span flex items-center justify-center><span i-carbon:categories mr-1 inline-block />全部</span>
           </button>
           <button
-            v-for="(c, index) in categories" :key="c" type="button"
-            class="text-xs font-medium px-2.5 py-0.5 border rounded-sm inline-flex gap-1 cursor-pointer select-none transition-all items-center"
+            v-for="(c, index) in categories" :key="c" type="button" class="btn-cate"
             :class="getTagColorClasses(index, selectedCategories.includes(c))" @click="toggleTag(c)"
           >
             <span v-if="getEmoji(c)">{{ getEmoji(c) }}</span>
@@ -192,9 +226,9 @@ onUnmounted(() => {
           </button>
         </div>
       </div>
-      <div class="text-center w-full -mt-20">
+      <div class="text-center w-full">
         <h1
-          class="text-[clamp(2rem,5vw,3rem)] text-gray-800 font-normal mb-6 whitespace-nowrap text-ellipsis overflow-hidden"
+          class="text-[#141D37] text-[clamp(2rem,4vw,2.8rem)] leading-tight font-semibold mb-5"
           :class="{ 'animate-shake': shakeTitle }"
         >
           <span class="today">今天</span>
@@ -202,6 +236,9 @@ onUnmounted(() => {
           <FoodItem :current-food="currentFood" />
           <span class="punctuation">？</span>
         </h1>
+        <p class="text-[15px] text-[#707486]">
+          发现美味灵感，开启今日好胃口
+        </p>
 
         <button id="start" class="outline-none cursor-pointer" @click="togglePlay">
           <FancyButton :text="isPlaying ? '停止' : '开始'" />
@@ -212,6 +249,10 @@ onUnmounted(() => {
 </template>
 
 <style>
+.btn-cate {
+  @apply text-xs font-medium px-3 py-2 border rounded-sm inline-flex gap-1 cursor-pointer select-none transition-all items-center;
+}
+
 /* 动画定义 */
 @keyframes shake {
   0% {

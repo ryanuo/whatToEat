@@ -7,7 +7,7 @@ const props = defineProps<{
 const nameText = computed(() => replaceText(props.currentFood?.name))
 
 function onClickVideo() {
-  window.open(`https://search.bilibili.com/all?keyword=${props.currentFood?.name}`, '_blank')
+  window.open(`https://search.bilibili.com/all?keyword=${props.currentFood?.name}的做法`, '_blank')
 }
 </script>
 
