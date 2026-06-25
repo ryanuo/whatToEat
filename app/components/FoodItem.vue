@@ -13,7 +13,7 @@ function onClickVideo() {
 
 <template>
   <a
-    :href="getOriginRecipeLink(currentFood?.source_path)"
+    :href="getOriginRecipeLink(currentFood?.name)"
     target="_blank"
     rel="noopener noreferrer"
     class="inline-block cursor-pointer"
