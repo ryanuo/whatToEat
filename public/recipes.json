@@ -294,6 +294,12 @@
     "source_path": "dishes/vegetable_dish/酸辣土豆丝.md"
   },
   {
+    "name": "蒜蓉炒芹菜",
+    "category": "素菜",
+    "link": "dishes/vegetable_dish/蒜蓉炒芹菜/蒜蓉炒芹菜",
+    "source_path": "dishes/vegetable_dish/蒜蓉炒芹菜/蒜蓉炒芹菜.md"
+  },
+  {
     "name": "蒜蓉空心菜",
     "category": "素菜",
     "link": "dishes/vegetable_dish/蒜蓉空心菜/蒜蓉空心菜",
