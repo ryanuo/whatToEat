@@ -432,6 +432,12 @@
     "source_path": "dishes/meat_dish/冬瓜酿肉/冬瓜酿肉.md"
   },
   {
+    "name": "冬瓜桑拿鸡",
+    "category": "荤菜",
+    "link": "dishes/meat_dish/冬瓜桑拿鸡",
+    "source_path": "dishes/meat_dish/冬瓜桑拿鸡.md"
+  },
+  {
     "name": "豆豉鲮鱼油麦菜",
     "category": "荤菜",
     "link": "dishes/meat_dish/豆豉鲮鱼油麦菜/豆豉鲮鱼油麦菜",
@@ -1858,6 +1864,12 @@
     "category": "汤与粥",
     "link": "dishes/soup/皮蛋瘦肉粥",
     "source_path": "dishes/soup/皮蛋瘦肉粥.md"
+  },
+  {
+    "name": "山药南瓜炖鸡汤",
+    "category": "汤与粥",
+    "link": "dishes/soup/山药南瓜炖鸡汤",
+    "source_path": "dishes/soup/山药南瓜炖鸡汤.md"
   },
   {
     "name": "生汆丸子汤",
