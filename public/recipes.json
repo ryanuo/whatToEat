@@ -42,6 +42,12 @@
     "source_path": "dishes/vegetable_dish/炒青菜.md"
   },
   {
+    "name": "炒土豆和胡萝卜蒸菜",
+    "category": "素菜",
+    "link": "dishes/vegetable_dish/炒土豆和胡萝卜蒸菜",
+    "source_path": "dishes/vegetable_dish/炒土豆和胡萝卜蒸菜.md"
+  },
+  {
     "name": "葱煎豆腐",
     "category": "素菜",
     "link": "dishes/vegetable_dish/葱煎豆腐",
