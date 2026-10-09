@@ -1,5 +1,7 @@
 # whatToEat
 
+[![Deploy to Railyard](https://app.railyard.run/deploy/badge)](https://app.railyard.run/deploy?repo=https://github.com/ryanuo/whatToEat)
+
 > 今天吃什么？的决策工具，帮助你快速选择合适的菜谱。
 
 <img src="./public/og-image.png" alt="License">
