@@ -384,6 +384,12 @@
     "source_path": "dishes/vegetable_dish/油醋爆蛋.md"
   },
   {
+    "name": "炸洋葱花",
+    "category": "素菜",
+    "link": "dishes/vegetable_dish/炸洋葱花/炸洋葱花",
+    "source_path": "dishes/vegetable_dish/炸洋葱花/炸洋葱花.md"
+  },
+  {
     "name": "奥尔良风味烤鸡腿",
     "category": "荤菜",
     "link": "dishes/meat_dish/奥尔良风味烤鸡腿/奥尔良风味烤鸡腿",
