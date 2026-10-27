@@ -7,7 +7,6 @@ const props = defineProps<{
   categories: string[]
   selected: string[]
   counts: Map<string, number>
-  total: number
 }>()
 
 const emit = defineEmits<{
@@ -23,13 +22,8 @@ watch(open, (val) => {
 })
 
 const isDraftAll = computed(() => {
-  return draftSelected.value.length === 0
-    || draftSelected.value.length === props.categories.length
-})
-
-// 弹窗摘要：0 项或全选都视为「全部」
-const draftSummary = computed(() => {
-  return isDraftAll.value ? '全部' : String(draftSelected.value.length)
+  return props.categories.length > 0
+    && draftSelected.value.length === props.categories.length
 })
 
 function close() {
@@ -48,11 +42,9 @@ function toggleDraft(tag: string) {
   draftSelected.value = draft
 }
 
+// footer 的「全选 / 取消全选」
 function toggleDraftAll() {
-  draftSelected.value
-    = draftSelected.value.length === props.categories.length
-      ? []
-      : [...props.categories]
+  draftSelected.value = isDraftAll.value ? [] : [...props.categories]
 }
 
 function confirm() {
@@ -77,7 +69,7 @@ useEventListener(document, 'keydown', (e) => {
                 选择分类
               </h2>
               <p class="filter-meta">
-                共 {{ categories.length }} 项 · 已选 {{ draftSummary }}
+                共 {{ categories.length }} 项 · 已选 {{ draftSelected.length }} 项
               </p>
             </div>
 
@@ -87,24 +79,6 @@ useEventListener(document, 'keydown', (e) => {
           </div>
 
           <div class="filter-circles">
-            <!-- 全部 -->
-            <button
-              type="button" class="circle-item"
-              :class="{ 'circle-item-active': isDraftAll }"
-              :aria-pressed="isDraftAll"
-              @click="toggleDraftAll"
-            >
-              <span class="circle" :class="{ 'circle-active': isDraftAll }">
-                <span class="circle-emoji">🍽️</span>
-                <span v-if="isDraftAll" class="circle-check">
-                  <span class="i-carbon:checkmark" />
-                </span>
-              </span>
-              <span class="circle-name">全部</span>
-              <span class="circle-count">{{ total }} 道</span>
-            </button>
-
-            <!-- 具体分类 -->
             <button
               v-for="category in categories" :key="category" type="button" class="circle-item"
               :class="{ 'circle-item-active': draftSelected.includes(category) }"
@@ -122,13 +96,19 @@ useEventListener(document, 'keydown', (e) => {
           </div>
 
           <div class="filter-foot">
-            <button type="button" class="filter-btn filter-btn-ghost" @click="close">
-              取消
+            <button type="button" class="filter-select-all" @click="toggleDraftAll">
+              {{ isDraftAll ? '取消全选' : '全选' }}
             </button>
 
-            <button type="button" class="filter-btn filter-btn-solid" @click="confirm">
-              确定筛选 ({{ draftSummary }})
-            </button>
+            <div class="filter-foot-actions">
+              <button type="button" class="filter-btn filter-btn-ghost" @click="close">
+                取消
+              </button>
+
+              <button type="button" class="filter-btn filter-btn-solid" @click="confirm">
+                确定{{ draftSelected.length > 0 ? `筛选 (${draftSelected.length})` : '（不限分类）' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -322,13 +302,43 @@ useEventListener(document, 'keydown', (e) => {
   border-radius: 12px;
 }
 
-/* 底部操作区 */
+/* 底部操作区：左「全选」右「取消/确定」 */
 .filter-foot {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
 
   padding-top: 16px;
+}
+
+.filter-select-all {
+  min-height: 36px;
+  padding: 8px 10px;
+
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: #5c6070;
+
+  font-size: 13px;
+
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.filter-select-all:hover {
+  color: var(--brand, #ed7d68);
+  background: color-mix(in srgb, var(--brand, #ed7d68) 8%, transparent);
+}
+
+.filter-select-all:focus-visible {
+  outline: 2px solid rgba(201, 77, 94, 0.75);
+  outline-offset: 2px;
+}
+
+.filter-foot-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .filter-btn {

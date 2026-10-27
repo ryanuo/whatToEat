@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { error, pending, refresh, recipes, categories, total, categoryCounts, isDataReady } = await useRecipes()
+const { error, pending, refresh, recipes, categories, categoryCounts, isDataReady } = await useRecipes()
 
 const { selectedCategories, selectedCount } = useCategoryFilter(categories)
 
@@ -154,7 +154,6 @@ function onConfirmFilter(selected: string[]) {
       :categories="categories"
       :selected="selectedCategories"
       :counts="categoryCounts"
-      :total="total"
       @close="isFilterOpen = false"
       @confirm="onConfirmFilter"
     />
