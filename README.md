@@ -1,7 +1,5 @@
 # whatToEat
 
-[![Deploy to Railyard](https://app.railyard.run/deploy/badge)](https://app.railyard.run/deploy?repo=https://github.com/ryanuo/whatToEat)
-
 > 今天吃什么？的决策工具，帮助你快速选择合适的菜谱。
 
 <img src="./public/og-image.png" alt="License">
@@ -9,6 +7,25 @@
 ## 项目介绍
 
 whatToEat 是一个基于 Nuxt 构建的应用，旨在解决日常饮食选择的困扰。通过提供丰富的菜谱数据，帮助用户随机选择或筛选适合的菜品，轻松解决"今天吃什么"的难题。
+
+## 功能特性
+
+- 🎲 **随机抽菜**：老虎机式高速轮换，一键定格今日菜品，菜名点击直达图文菜谱
+- 🎨 **换肤与主题色**：5 套手绘背景 + 5 组主题色自由搭配，本地记忆选择
+- 🧁 **分类筛选**：气泡式选择弹窗，按菜系缩小抽取范围，空选即全部
+- 📺 **视频做法**：一键搜索 B 站视频教程，页面内弹窗直接播放（移动端为底部抽屉）
+- 📱 **全端适配**：响应式布局，键盘焦点与无障碍支持
+
+## 项目结构
+
+```
+app/
+├── components/    # Eat 主界面、FilterModal/VideoModal 弹窗、Header 品牌导航、FoodItem 菜名链接
+├── composables/   # useRecipes 数据获取、useRandomFood 随机抽取、useSkin 换肤主题色
+└── constants/     # 皮肤、主题色、Emoji 等配置
+server/routes/api/ # recipes 菜谱接口、video-search B 站视频搜索代理
+scripts/crawl.py   # 每周自动抓取 HowToCook 菜谱数据
+```
 
 ## 快速开始
 
@@ -57,13 +74,14 @@ pnpm preview
 
 [![Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/ryanuo/whatToEat)
 [![Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ryanuo/whatToEat)
+[![Railyard](https://app.railyard.run/deploy/badge)](https://app.railyard.run/deploy?repo=https://github.com/ryanuo/whatToEat)
 
 ### Docker 部署
 
-默认使用公开菜单（与原项目一致）：`https://eat.ryanuo.cc/recipes.json`。
+默认使用镜像内置的菜谱数据（构建时打包仓库内的 `public/recipes.json`）。如需指向自定义菜谱源，设置 `RECIPES_URL` 环境变量（支持 base URL 或完整 `recipes.json` URL）：
 
 ```bash
-docker compose up -d --build
+RECIPES_URL=http://your-recipes-host:5000 docker compose up -d --build
 ```
 
 ### Docker 部署（服务器不构建：从 GHCR 拉镜像运行）
@@ -82,7 +100,7 @@ docker run -d --name whattoeat \
 
 ## 数据来源
 
-菜谱数据来源于远程 JSON 接口，通过 `server/routes/api/recipes.ts` 进行获取和处理。
+菜谱数据由 `scripts/crawl.py` 每周从 [HowToCook](https://github.com/Anduin2017/HowToCook) 抓取生成 `public/recipes.json`（通过 GitHub Actions 自动提交）。服务端接口 `server/routes/api/recipes.ts` 默认读取本地内置数据，也可通过 `RECIPES_URL` 环境变量指向自定义菜谱源。
 
 ## 参考
 

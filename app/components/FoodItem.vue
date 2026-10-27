@@ -4,26 +4,96 @@ import type { CurrentFood } from '~/types'
 const props = defineProps<{
   currentFood?: CurrentFood
 }>()
-const nameText = computed(() => replaceText(props.currentFood?.name))
 
-function onClickVideo() {
-  window.open(`https://search.bilibili.com/all?keyword=${props.currentFood?.name}的做法`, '_blank')
-}
+const nameText = computed(() => replaceText(props.currentFood?.name))
+const hasFood = computed(() => !!props.currentFood?.name && nameText.value !== '神马')
+const recipeUrl = computed(() => getOriginRecipeLink(props.currentFood?.name))
 </script>
 
 <template>
+  <!-- 有菜品：菜名即入口，点击新标签页打开做法 -->
   <a
-    :href="getOriginRecipeLink(currentFood?.name)"
+    v-if="hasFood"
+    :href="recipeUrl"
     target="_blank"
     rel="noopener noreferrer"
-    class="inline-block cursor-pointer"
+    :aria-label="`${nameText}的做法，在新标签页打开`"
+    class="dish-link"
   >
-    <b
-      class="text-gray-900 font-bold underline-black underline-offset-10 underline-dashed transition-all hover:underline-cyan"
-      :class="{ underline: nameText !== '神马' }"
-    >
-      {{ nameText }}
-    </b>
+    <span class="dish-name">{{ nameText }}</span>
+    <svg class="dish-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
   </a>
-  <svg v-if="nameText !== '神马'" xmlns="http://www.w3.org/2000/svg" class="ml-1 align-base op-70 inline-block cursor-pointer" width="24" height="24" viewBox="0 0 24 24" @click="onClickVideo"><path fill="currentColor" fill-rule="evenodd" d="M11.943 1.25h.114c2.309 0 4.118 0 5.53.19c1.444.194 2.584.6 3.479 1.494c.895.895 1.3 2.035 1.494 3.48c.19 1.411.19 3.22.19 5.529v.114c0 2.309 0 4.118-.19 5.53c-.194 1.444-.6 2.584-1.494 3.479c-.895.895-2.035 1.3-3.48 1.494c-1.411.19-3.22.19-5.529.19h-.114c-2.309 0-4.118 0-5.53-.19c-1.444-.194-2.584-.6-3.479-1.494c-.895-.895-1.3-2.035-1.494-3.48c-.19-1.411-.19-3.22-.19-5.529v-.114c0-2.309 0-4.118.19-5.53c.194-1.444.6-2.584 1.494-3.479c.895-.895 2.035-1.3 3.48-1.494c1.411-.19 3.22-.19 5.529-.19M6.25 2.982c-1.065.183-1.742.5-2.255 1.013c-.514.513-.83 1.19-1.013 2.255H6.25zm1.5-.162v3.43h3.5v-3.5c-1.395.002-2.54.011-3.5.07m5-.07v3.5h3.5V2.82c-.96-.059-2.105-.068-3.5-.07m5 .232V6.25h3.268c-.183-1.065-.5-1.742-1.013-2.255c-.513-.514-1.19-.83-2.255-1.013m3.43 4.768H2.82c-.07 1.126-.07 2.508-.07 4.25s0 3.124.07 4.25h18.36c.07-1.126.07-2.508.07-4.25s0-3.124-.07-4.25m-.162 10H17.75v3.268c1.065-.183 1.742-.5 2.255-1.013c.514-.513.83-1.19 1.013-2.255m-4.768 3.43v-3.43h-3.5v3.5c1.395-.002 2.54-.011 3.5-.07m-5 .07v-3.5h-3.5v3.43c.96.059 2.105.068 3.5.07m-5-.232V17.75H2.982c.183 1.065.5 1.742 1.013 2.255c.513.514 1.19.83 2.255 1.013m6.53-11.27l.05.034l.046.031c.49.33.927.623 1.235.907c.334.307.639.714.639 1.28s-.305.973-.639 1.28c-.308.284-.745.578-1.235.907l-.046.031l-.05.034c-.494.332-.938.63-1.312.803c-.392.181-.949.336-1.482-.016c-.49-.324-.624-.866-.68-1.3c-.056-.439-.056-1.016-.056-1.688v-.102c0-.672 0-1.25.056-1.688c.056-.434.19-.976.68-1.3c.533-.352 1.09-.198 1.482-.016c.373.173.818.471 1.311.803m-1.96.55l.018.008c.251.116.595.344 1.155.72c.55.371.89.601 1.102.797a.8.8 0 0 1 .154.177l-.003.007a.8.8 0 0 1-.151.17c-.213.196-.551.426-1.102.796c-.56.377-.904.605-1.155.72l-.019.01a2 2 0 0 1-.025-.154c-.043-.332-.044-.811-.044-1.549s.002-1.217.044-1.55q.012-.094.025-.152" clip-rule="evenodd" /></svg>
+
+  <!-- 未抽取：普通占位文字，不可点击 -->
+  <span v-else class="dish-static">{{ nameText }}</span>
 </template>
+
+<style scoped>
+.dish-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+
+  color: inherit;
+  text-decoration: none;
+  border-radius: 8px;
+  margin-right: 8px;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dish-name {
+  font-weight: 700;
+
+  /* 细腻的低饱和主题色虚线下划线，呼应手绘线稿 */
+  text-decoration: underline dashed color-mix(in srgb, var(--brand, #ed7d68) 55%, transparent);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 8px;
+
+  transition: color 160ms ease;
+}
+
+.dish-static {
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.dish-link:hover .dish-name {
+  color: color-mix(in srgb, var(--brand, #ed7d68) 80%, #141d37);
+}
+
+/* 外链箭头：默认低调可见（兼顾移动端无 hover），悬停时提亮微移 */
+.dish-arrow {
+  flex: none;
+
+  width: 0.45em;
+  height: 0.45em;
+
+  color: color-mix(in srgb, var(--brand, #ed7d68) 70%, #141d37);
+  opacity: 0.45;
+
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.dish-link:hover .dish-arrow {
+  opacity: 1;
+  transform: translate(1.5px, -1.5px);
+}
+
+.dish-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--brand, #ed7d68) 75%, transparent);
+  outline-offset: 5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dish-name,
+  .dish-arrow {
+    transition: none;
+  }
+}
+</style>

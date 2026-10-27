@@ -6,7 +6,15 @@ export function getOriginRecipeLink(name?: string) {
   if (!name)
     return ''
 
-  return `https://howtocook.aiursoft.com/Dashboard?q=${name}`
+  return `https://howtocook.aiursoft.com/Dashboard?q=${encodeURIComponent(name)}`
+}
+
+// B 站视频做法搜索链接
+export function getVideoSearchLink(name?: string) {
+  if (!name)
+    return ''
+
+  return `https://search.bilibili.com/all?keyword=${encodeURIComponent(`${name}的做法`)}`
 }
 
 // 是否为pc端

@@ -1,176 +1,55 @@
 <script setup lang="ts">
-import type { CurrentFood, RecipeResponse } from '~/types'
-import { useStorage } from '@vueuse/core'
-import { emojiMap } from '~/constants'
+const { error, pending, refresh, recipes, categories, total, categoryCounts, isDataReady } = await useRecipes()
 
-const isPlaying = ref(false)
-const currentFood = ref<CurrentFood>()
-const shakeTitle = ref(false)
-const { data, error, pending, refresh } = await useFetch<RecipeResponse>('/api/recipes', {
-  retry: 3,
-  retryDelay: 1000,
-  timeout: 10000,
+const { selectedCategories, selectedCount } = useCategoryFilter(categories)
+
+const { isPlaying, currentFood, shakeTitle, togglePlay } = useRandomFood(recipes, selectedCategories)
+
+const { skin: bgSkin, themeColor } = useSkin()
+
+// 主题色注入 :root，保证 Teleport 到 body 的弹窗也能取到 var(--brand)
+watchEffect(() => {
+  if (import.meta.client)
+    document.documentElement.style.setProperty('--brand', themeColor.value.color)
 })
 
-// 检查数据是否成功加载
-const isDataReady = computed(() => {
-  return !pending.value && !error.value && data.value && data.value.recipes && data.value.recipes.length > 0
+// 当前菜品是否有可跳转的做法
+const hasFood = computed(() => {
+  return !!currentFood.value?.name && replaceText(currentFood.value.name) !== '神马'
 })
 
-const categories = computed(() => (data.value?.categories || []) as string[])
-const selectedCategories = useStorage<string[]>('selected-categories', [...categories.value])
-const isAllSelected = computed(() => selectedCategories.value.length === categories.value.length)
-const { playAnimation } = useEmojiAnimation()
+// B 站视频做法搜索链接（提示行入口）
+const videoUrl = computed(() => getVideoSearchLink(currentFood.value?.name))
 
-// 首次加载 categories 时默认选中全部具体分类
-const stopWatchCategories = watch(categories, (newVal) => {
-  if (newVal && newVal.length) {
-    // 默认选中所有具体分类
-    selectedCategories.value = [...newVal]
-    // 初始化完成后停止监听
-    stopWatchCategories()
-  }
-})
+/* ---------------- 弹窗状态 ---------------- */
 
-// 获取标签的emoji
-function getEmoji(tag: string) {
-  return emojiMap[tag] || ''
+const isFilterOpen = ref(false)
+const isVideoOpen = ref(false)
+
+function onConfirmFilter(selected: string[]) {
+  selectedCategories.value = selected
 }
-// 获取标签的颜色类
-function getTagColorClasses(index: number, isActive: boolean) {
-  const colorConfig = {
-    bg: 'bg-[#FEFCFA]',
-    text: 'text-[#B9B5B0]',
-    border: 'border-[#E8E4E2]',
-    active: 'bg-[#DFDCDA]',
-    activeText: 'text-[#41465E]',
-    activeBorder: 'border-[#E8E4E2]',
-  }
-  const { bg, text, border, active, activeText, activeBorder } = colorConfig
-
-  return isActive
-    ? `${active} ${activeText} ${activeBorder}`
-    : `${bg} ${text} ${border}`
-}
-
-let randomTimer: ReturnType<typeof setTimeout> | null = null
-
-function togglePlay() {
-  if (isPlaying.value)
-    stopRandom()
-  else
-    startRandom()
-  isPlaying.value = !isPlaying.value
-}
-
-// ✅ 改用递归随机器
-function startRandom() {
-  if (!import.meta.client)
-    return
-
-  // 确保数据已加载
-  if (!data.value?.recipes || data.value.recipes.length === 0) {
-    console.warn('菜单数据未加载，无法开始随机')
-    return
-  }
-
-  currentFood.value = undefined
-  shakeTitle.value = true
-
-  const loop = () => {
-    const allFoods = data.value?.recipes || []
-    const foods = selectedCategories.value.length > 0
-      ? allFoods.filter(r => selectedCategories.value.includes(r.category))
-      : allFoods
-    const list = foods.length ? foods : allFoods
-    const randomFood = list[Math.floor(Math.random() * list.length)]
-    currentFood.value = randomFood
-    createFloatingText(replaceText(randomFood?.name))
-
-    randomTimer = setTimeout(loop, 100)
-  }
-
-  loop()
-}
-
-function stopRandom() {
-  shakeTitle.value = false
-  if (randomTimer)
-    clearTimeout(randomTimer)
-  randomTimer = null
-}
-
-function toggleTag(tag: string) {
-  if (tag === 'all') {
-    if (!isAllSelected.value)
-      selectedCategories.value = [...categories.value]
-    else
-      selectedCategories.value = [categories.value[1]!]
-    return
-  }
-
-  const set = selectedCategories.value
-  const idx = set.indexOf(tag)
-
-  if (idx === -1) {
-    playAnimation(getEmoji(tag))
-    set.push(tag)
-  }
-  else {
-    set.splice(idx, 1)
-  }
-
-  // 如果空选，则默认选中第一个（一般是 'all'）
-  if (set.length === 0 && categories.value.length)
-    selectedCategories.value = [categories.value[1]!]
-}
-
-function createFloatingText(text = '') {
-  const container = document.getElementById('temp_container')
-  if (!container)
-    return
-
-  const temp = document.createElement('div')
-  const colors = [
-    'rgba(156, 163, 175, 0.8)',
-    'rgba(209, 213, 219, 0.8)',
-    'rgba(243, 244, 246, 0.9)',
-    'rgba(200, 200, 200, 0.7)',
-  ]
-  const sizes = ['0.8rem', '1rem', '1.2rem']
-  const rotate = (Math.random() - 0.5) * 20
-
-  temp.textContent = text
-  temp.className = 'absolute font-medium animate-float-up select-none whitespace-nowrap'
-  temp.style.color = colors[Math.floor(Math.random() * colors.length)]!
-  temp.style.fontSize = sizes[Math.floor(Math.random() * sizes.length)]!
-  temp.style.left = `${Math.random() * 80 + 10}%`
-  temp.style.top = `${Math.random() * 80 + 10}%`
-  temp.style.transform = `rotate(${rotate}deg)`
-  temp.style.filter = 'blur(0.5px)'
-  temp.style.textShadow = '0 0 4px rgba(255,255,255,0.4)'
-
-  container.appendChild(temp)
-  setTimeout(() => temp.remove(), 1600)
-}
-
-onUnmounted(() => {
-  if (randomTimer)
-    clearTimeout(randomTimer)
-})
 </script>
 
 <template>
-  <div class="bg-[#E9E9E9] min-h-screen relative overflow-hidden">
+  <div class="food-page min-h-screen relative overflow-hidden" :style="{ backgroundColor: bgSkin.bgColor }">
     <FluidCursor v-if="isPC()" class="absolute z-11!" />
 
     <Header />
+
+    <!-- 动态背景 -->
     <div
-      class="bg-[#E9E9E9] bg-[url('/pic/bg2.png')] transition-all inset-0 absolute z-0 bg-center"
-      :class="{ 'animate-paused': isPlaying }" :style="{ animation: `flow 16s linear infinite` }"
+      :key="bgSkin.key" class="food-background inset-0 absolute z-0 bg-center bg-repeat"
+      :class="{ 'animate-paused': isPlaying }" :style="{
+        'backgroundColor': bgSkin.bgColor,
+        'backgroundImage': `url(${bgSkin.url})`,
+        'animation': `flow ${(bgSkin.tileHeight / 31.25).toFixed(1)}s linear infinite`,
+        '--bg-tile-h': `${bgSkin.tileHeight}px`,
+      }"
     />
 
-    <div id="temp_container" class="inset-0 absolute z-12 overflow-hidden" />
+    <!-- 抽取动画文字 -->
+    <div id="temp_container" class="pointer-events-none inset-0 absolute z-12 overflow-hidden" />
 
     <!-- 加载状态 -->
     <div v-if="pending" class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
@@ -188,11 +67,13 @@ onUnmounted(() => {
         <p class="text-red-600 mb-4">
           😞 菜单数据加载失败
         </p>
+
         <p class="text-sm text-gray-600 mb-4">
           {{ error.message }}
         </p>
+
         <button
-          class="text-white px-4 py-2 rounded bg-blue-500 transition-colors hover:bg-blue-600"
+          type="button" class="text-white px-4 py-2 rounded-lg bg-blue-500 transition-colors hover:bg-blue-600"
           @click="() => refresh()"
         >
           重新加载
@@ -200,14 +81,15 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- 数据为空状态 -->
+    <!-- 空数据状态 -->
     <div v-else-if="!isDataReady" class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
       <div class="text-center">
         <p class="text-gray-600 mb-4">
           📭 暂无菜单数据
         </p>
+
         <button
-          class="text-white px-4 py-2 rounded bg-blue-500 transition-colors hover:bg-blue-600"
+          type="button" class="text-white px-4 py-2 rounded-lg bg-blue-500 transition-colors hover:bg-blue-600"
           @click="() => refresh()"
         >
           重新加载
@@ -215,53 +97,222 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- 正常内容显示 -->
-    <div v-else class="px-4 flex flex-col min-h-screen items-center justify-center relative z-20">
-      <div class="mb-4 flex flex-wrap gap-3 items-center top-15 justify-center absolute">
-        <div class="flex flex-wrap gap-2 justify-center">
-          <button
-            key="all" type="button" class="btn-cate" :class="getTagColorClasses(-1, isAllSelected)"
-            @click="toggleTag('all')"
-          >
-            <span flex items-center justify-center><span i-carbon:categories mr-1 inline-block />全部</span>
-          </button>
-          <button
-            v-for="(c, index) in categories" :key="c" type="button" class="btn-cate"
-            :class="getTagColorClasses(index, selectedCategories.includes(c))" @click="toggleTag(c)"
-          >
-            <span v-if="getEmoji(c)">{{ getEmoji(c) }}</span>
-            {{ c }}
-          </button>
-        </div>
-      </div>
-      <div class="text-center w-full">
-        <h1
-          class="text-[#141D37] text-[clamp(2rem,4vw,2.8rem)] leading-tight font-semibold mb-5"
-          :class="{ 'animate-shake': shakeTitle }"
-        >
+    <!-- 正常首页 -->
+    <main v-else class="px-4 pb-12 pt-24 flex flex-col min-h-screen items-center justify-center relative z-20 sm:pt-28">
+      <!-- 筛选入口：水印级轻量按钮 -->
+      <button type="button" class="filter-entry" @click="isFilterOpen = true">
+        <span class="i-carbon:filter" />
+        <span>{{ selectedCount > 0 ? `已选 ${selectedCount} 个分类` : '筛选分类' }}</span>
+      </button>
+
+      <!-- 中央主视觉 -->
+      <section class="hero-content text-center w-full">
+        <p class="hero-subtitle">
+          发现美味灵感，开启今日好胃口
+        </p>
+
+        <h1 class="hero-title text-[#141D37] leading-tight font-semibold mb-5" :class="{ 'animate-shake': shakeTitle }">
           <span class="today">今天</span>
           <span class="eat">吃</span>
           <FoodItem :current-food="currentFood" />
           <span class="punctuation">？</span>
         </h1>
-        <p class="text-[15px] text-[#707486]">
-          发现美味灵感，开启今日好胃口
-        </p>
 
-        <button id="start" class="outline-none cursor-pointer" @click="togglePlay">
-          <FancyButton :text="isPlaying ? '停止' : '开始'" />
-        </button>
-      </div>
-    </div>
+        <!-- 菜做法提示行：B 站视频入口（页面内弹窗播放） -->
+        <a
+          v-if="hasFood"
+          :href="videoUrl"
+          rel="noopener noreferrer"
+          class="recipe-hint"
+          :aria-label="`在 B 站查看${replaceText(currentFood?.name)}的视频做法`"
+          @click.prevent="isVideoOpen = true"
+        >
+          <svg
+            class="recipe-hint__icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="m10 8 6 4-6 4z" fill="currentColor" stroke="none" />
+          </svg>
+          <span>查看这道菜的做法</span>
+        </a>
+
+        <div class="hero-action">
+          <button
+            id="start" type="button" class="start-button outline-none"
+            :aria-label="isPlaying ? '停止随机抽取' : '开始随机抽取'" @click="togglePlay"
+          >
+            <FancyButton :text="isPlaying ? '停止' : '开始'" />
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- 分类筛选弹窗 -->
+    <FilterModal
+      :open="isFilterOpen"
+      :categories="categories"
+      :selected="selectedCategories"
+      :counts="categoryCounts"
+      :total="total"
+      @close="isFilterOpen = false"
+      @confirm="onConfirmFilter"
+    />
+
+    <!-- 视频做法弹窗 -->
+    <VideoModal
+      :open="isVideoOpen"
+      :name="replaceText(currentFood?.name)"
+      :search-url="videoUrl"
+      @close="isVideoOpen = false"
+    />
   </div>
 </template>
 
 <style>
-.btn-cate {
-  @apply text-xs font-medium px-3 py-2 border rounded-sm inline-flex gap-1 cursor-pointer select-none transition-all items-center;
+/* 页面层 */
+.food-page {
+  isolation: isolate;
 }
 
-/* 动画定义 */
+.food-background {
+  pointer-events: none;
+  background-size: auto;
+}
+
+/* 筛选入口：右上角水印级按钮 */
+.filter-entry {
+  position: absolute;
+  top: 72px;
+  right: 16px;
+  z-index: 30;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  min-height: 32px;
+  padding: 5px 12px;
+
+  border: 1px solid rgba(70, 74, 88, 0.14);
+  border-radius: 9999px;
+  background: transparent;
+  color: #5c6070;
+
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+@media (min-width: 640px) {
+  .filter-entry {
+    right: 32px;
+  }
+}
+
+.filter-entry:hover {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: color-mix(in srgb, var(--brand, #ed7d68) 40%, transparent);
+  color: var(--brand, #ed7d68);
+}
+
+.filter-entry:focus-visible {
+  outline: 2px solid rgba(201, 77, 94, 0.75);
+  outline-offset: 2px;
+}
+
+/* ---------------- 中央主视觉 ---------------- */
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+}
+
+.hero-title {
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  letter-spacing: -0.035em;
+}
+
+/* 局部强调：仅「吃」用低饱和主题色，呼应背景线稿点缀 */
+.eat {
+  color: color-mix(in srgb, var(--brand, #ed7d68) 72%, #707486);
+}
+
+.hero-subtitle {
+  color: #707486;
+  font-size: 15px;
+  line-height: 1.8;
+  letter-spacing: 0.015em;
+}
+
+.hero-action {
+  display: flex;
+  justify-content: center;
+  margin-top: 34px;
+}
+
+.start-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.start-button:focus-visible {
+  outline: 2px solid #202d67;
+  outline-offset: 5px;
+  border-radius: 9999px;
+}
+
+/* 菜做法提示行：标题正下方的轻量文字入口 */
+.recipe-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  /* 上移贴近标题（h1 自带 mb-5），与下方开始按钮保持呼吸感 */
+  margin: -10px 0 22px;
+  padding: 6px 10px;
+
+  color: #928d82;
+  font-size: 13px;
+  line-height: 1;
+  text-decoration: none;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 160ms ease;
+}
+
+.recipe-hint:hover {
+  color: #6e6960;
+}
+
+.recipe-hint__icon {
+  flex: none;
+
+  width: 17px;
+  height: 17px;
+
+  color: #a5a096;
+  transition: color 160ms ease;
+}
+
+.recipe-hint:hover .recipe-hint__icon {
+  color: color-mix(in srgb, var(--brand, #ed7d68) 85%, #6e6960);
+}
+
+.recipe-hint:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--brand, #ed7d68) 75%, transparent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* 标题抽取动画 */
 @keyframes shake {
   0% {
     transform: translateX(5px);
@@ -288,50 +339,22 @@ onUnmounted(() => {
   }
 }
 
+.animate-shake {
+  animation: shake 0.4s;
+}
+
+/* 背景循环 */
 @keyframes flow {
   0% {
     background-position: 50% 0;
   }
 
   100% {
-    background-position: 50% -500px;
-  }
-
-  /* 半张图高度 */
-}
-
-@keyframes flash {
-  0% {
-    opacity: 0;
-    transform: scale(1.5);
-    color: transparent;
-    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-    transform: scale(0.5);
+    background-position: 50% calc(0px - var(--bg-tile-h, 500px));
   }
 }
 
-@keyframes dinnerTip {
-  0%,
-  100% {
-    opacity: 0;
-    transform: perspective(600px) translate3d(-50%, 7px, 0) scale(0.7) rotateY(180deg);
-  }
-
-  20%,
-  80% {
-    opacity: 1;
-    transform: perspective(600px) translate3d(-50%, 0, 0) rotateY(0deg);
-  }
-}
-
+/* 浮动文字（原生 DOM 节点使用，需保持全局） */
 @keyframes floatUp {
   0% {
     opacity: 0;
@@ -359,27 +382,43 @@ onUnmounted(() => {
   will-change: transform, opacity;
 }
 
-.text-glow {
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
-}
-
-.animate-shake {
-  animation: shake 0.4s;
-}
-
-.animate-flow {
-  animation: flow 16s linear infinite;
-}
-
-.animate-flash {
-  animation: flash 1.6s ease-out both;
-}
-
-.animate-dinnerTip {
-  animation: dinnerTip 3s 1s linear both;
-}
-
 .animate-paused {
   animation-play-state: paused;
+}
+
+/* 手机端 */
+@media (max-width: 640px) {
+  .hero-title {
+    margin-bottom: 16px;
+    font-size: clamp(1.8rem, 8vw, 2.3rem);
+  }
+
+  /* 移动端扩大提示行触摸区域 */
+  .recipe-hint {
+    margin: -8px 0 18px;
+    padding: 9px 12px;
+  }
+
+  .hero-subtitle {
+    font-size: 13px;
+  }
+
+  .hero-action {
+    margin-top: 28px;
+  }
+}
+
+/* 减少动态效果偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .filter-entry,
+  .recipe-hint,
+  .recipe-hint__icon {
+    transition: none;
+  }
+
+  .animate-shake,
+  .animate-float-up {
+    animation: none;
+  }
 }
 </style>
