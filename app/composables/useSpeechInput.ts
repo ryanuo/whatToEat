@@ -1,4 +1,7 @@
+import type { Ref } from 'vue'
+
 // Web Speech API 语音输入：先特性检测，支持才暴露麦克风入口
+// 语言由调用方以 ref 传入，每次开始录音时应用
 interface SpeechRecognitionLike {
   lang: string
   interimResults: boolean
@@ -16,7 +19,17 @@ interface SpeechRecognitionEventLike {
 
 type SpeechRecognitionCtor = new () => SpeechRecognitionLike
 
-export function useSpeechInput(onResult: (text: string) => void) {
+// Chrome SpeechRecognition 实际支持的常用语种
+export const speechLanguages = [
+  { code: 'zh-CN', name: '中文普通话' },
+  { code: 'zh-TW', name: '中文（台湾）' },
+  { code: 'zh-HK', name: '粤语（香港）' },
+  { code: 'en-US', name: 'English (US)' },
+  { code: 'ja-JP', name: '日本語' },
+  { code: 'ko-KR', name: '한국어' },
+] as const
+
+export function useSpeechInput(onResult: (text: string) => void, language: Ref<string>) {
   const isSupported = ref(false)
   const isListening = ref(false)
   let recognition: SpeechRecognitionLike | null = null
@@ -32,7 +45,6 @@ export function useSpeechInput(onResult: (text: string) => void) {
 
     isSupported.value = true
     recognition = new Ctor()
-    recognition.lang = 'zh-CN'
     recognition.interimResults = false
     recognition.maxAlternatives = 1
     recognition.onresult = (event) => {
@@ -58,6 +70,7 @@ export function useSpeechInput(onResult: (text: string) => void) {
     }
     else {
       try {
+        recognition.lang = language.value || 'zh-CN'
         recognition.start()
         isListening.value = true
       }

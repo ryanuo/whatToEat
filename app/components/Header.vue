@@ -2,7 +2,48 @@
 import { appName } from '~/constants'
 
 const { skin, setSkin, skins, themeColor, setThemeColor, themeColors } = useSkin()
-const { config: aiConfig, aiEnabled, clearConfig } = useAiConfig()
+const { config: aiConfig, configured, aiHeaders, clearConfig, testConnection } = useAiConfig()
+
+// 连通性测试状态（由配置派生，避免多状态同步）：empty 未填全 / unverified 未测 / testing 检测中 / ok 可用 / fail 不可用
+const testing = ref(false)
+const testFailed = ref(false)
+
+watch(
+  () => `${aiConfig.value.baseUrl}|${aiConfig.value.apiKey}|${aiConfig.value.model}`,
+  () => {
+    testFailed.value = false
+  },
+)
+
+const testState = computed<'empty' | 'unverified' | 'testing' | 'ok' | 'fail'>(() => {
+  if (!configured.value)
+    return 'empty'
+  if (testing.value)
+    return 'testing'
+  if (aiConfig.value.ready)
+    return 'ok'
+  return testFailed.value ? 'fail' : 'unverified'
+})
+
+const statusText = computed(() => {
+  switch (testState.value) {
+    case 'ok': return '✓ 可用'
+    case 'fail': return '✗ 不可用'
+    case 'testing': return '● 检测中'
+    case 'unverified': return '● 未验证'
+    default: return '○ 未配置'
+  }
+})
+
+async function runTest() {
+  if (testing.value || !configured.value)
+    return
+
+  testing.value = true
+  const ok = await testConnection()
+  testing.value = false
+  testFailed.value = !ok
+}
 const isPickerOpen = ref(false)
 const pickerRef = ref<HTMLElement>()
 
@@ -10,49 +51,87 @@ onClickOutside(pickerRef, () => {
   isPickerOpen.value = false
 })
 
-/* ---------------- 模型搜索（models.dev） ---------------- */
+/* ---------------- AI 配置：厂商快捷 + 动态模型列表 ---------------- */
 
-interface ModelItem {
-  providerId: string
-  providerName: string
-  baseUrl: string
-  modelId: string
+const providerId = ref(matchAiProvider(aiConfig.value.baseUrl)?.id ?? 'custom')
+
+// 手动修改 Base URL 后自动匹配预设厂商，匹配不上回落「自定义」
+watch(
+  () => aiConfig.value.baseUrl,
+  (url) => {
+    providerId.value = matchAiProvider(url)?.id ?? 'custom'
+  },
+)
+
+// 模型列表：从厂商 /models 接口动态拉取，按 (baseUrl, apiKey) 记忆
+const modelList = ref<string[]>([])
+const modelsLoading = ref(false)
+const modelsCacheKey = ref('')
+
+function selectProvider(id: string) {
+  providerId.value = id
+
+  const provider = aiProviders.find(p => p.id === id)
+  if (provider) {
+    aiConfig.value = { ...aiConfig.value, baseUrl: provider.baseUrl }
+    modelsCacheKey.value = ''
+    modelList.value = []
+  }
 }
 
-const modelQuery = ref('')
-const modelResults = ref<ModelItem[]>([])
-const searching = ref(false)
-let searchTimer: ReturnType<typeof setTimeout> | null = null
+async function ensureModels() {
+  const c = aiConfig.value
+  if (!c.baseUrl || !c.apiKey || modelsLoading.value)
+    return
 
-function onModelSearch() {
-  if (searchTimer)
-    clearTimeout(searchTimer)
+  const key = `${c.baseUrl}|${c.apiKey}`
+  if (key === modelsCacheKey.value && modelList.value.length)
+    return
 
-  searchTimer = setTimeout(async () => {
-    const q = modelQuery.value.trim()
-    if (!q) {
-      modelResults.value = []
-      return
-    }
-
-    searching.value = true
-    try {
-      const res = await $fetch<{ items: ModelItem[] }>('/api/ai/models', { params: { q } })
-      modelResults.value = res.items
-    }
-    catch {
-      modelResults.value = []
-    }
-    finally {
-      searching.value = false
-    }
-  }, 300)
+  modelsLoading.value = true
+  try {
+    const res = await $fetch<{ models: string[] }>('/api/ai/models', { headers: aiHeaders() })
+    modelList.value = res.models
+    modelsCacheKey.value = key
+  }
+  catch {
+    modelList.value = []
+  }
+  finally {
+    modelsLoading.value = false
+  }
 }
 
-function chooseModel(item: ModelItem) {
-  aiConfig.value = { ...aiConfig.value, baseUrl: item.baseUrl, model: item.modelId }
-  modelQuery.value = ''
-  modelResults.value = []
+// 模型输入的模糊建议
+const modelFocus = ref(false)
+let blurTimer: ReturnType<typeof setTimeout> | null = null
+
+const modelSuggestions = computed(() => {
+  const q = aiConfig.value.model.trim().toLowerCase()
+  const list = q
+    ? modelList.value.filter(m => m.toLowerCase().includes(q))
+    : modelList.value
+
+  return list.filter(m => m !== aiConfig.value.model).slice(0, 8)
+})
+
+function onModelFocus() {
+  modelFocus.value = true
+  ensureModels()
+}
+
+function onModelBlur() {
+  if (blurTimer)
+    clearTimeout(blurTimer)
+
+  blurTimer = setTimeout(() => {
+    modelFocus.value = false
+  }, 150)
+}
+
+function chooseModel(model: string) {
+  aiConfig.value = { ...aiConfig.value, model }
+  modelFocus.value = false
 }
 </script>
 
@@ -119,59 +198,99 @@ function chooseModel(item: ModelItem) {
               </div>
             </div>
 
-            <!-- AI 助手：models.dev 搜索选模型 + 自填 Key，仅存本地浏览器 -->
+            <!-- AI 助手：厂商快捷 + 动态模型列表 + 自填 Key，仅存本地浏览器 -->
             <div class="panel-section">
               <p class="panel-label">
                 AI 助手（Key 仅存本地浏览器）
               </p>
-              <div class="panel-row panel-model-search">
-                <input
-                  v-model="modelQuery"
-                  class="ai-field"
-                  placeholder="搜索厂商 / 模型，如 deepseek、glm"
-                  spellcheck="false"
-                  @input="onModelSearch"
-                >
-                <span v-if="searching" class="search-spin i-carbon:renew" aria-hidden="true" />
-              </div>
-              <div v-if="modelResults.length" class="model-results">
+              <div class="panel-row panel-providers">
                 <button
-                  v-for="r in modelResults"
-                  :key="`${r.providerId}-${r.modelId}`"
+                  v-for="p in aiProviders"
+                  :key="p.id"
                   type="button"
-                  class="model-item"
-                  @click="chooseModel(r)"
+                  class="provider-chip"
+                  :class="{ 'provider-chip-active': providerId === p.id }"
+                  @click="selectProvider(p.id)"
                 >
-                  <b>{{ r.providerName }}</b>
-                  <span class="model-id">{{ r.modelId }}</span>
+                  {{ p.name }}
+                </button>
+                <button
+                  type="button"
+                  class="provider-chip"
+                  :class="{ 'provider-chip-active': providerId === 'custom' }"
+                  @click="selectProvider('custom')"
+                >
+                  自定义
                 </button>
               </div>
-              <input
-                v-model="aiConfig.baseUrl"
-                class="ai-field"
-                placeholder="Base URL，如 https://api.deepseek.com/v1"
-                spellcheck="false"
-              >
-              <input
-                v-model="aiConfig.apiKey"
-                type="password"
-                class="ai-field"
-                placeholder="API Key"
-                spellcheck="false"
-              >
-              <input
-                v-model="aiConfig.model"
-                class="ai-field"
-                placeholder="模型，如 deepseek-chat"
-                spellcheck="false"
-              >
+              <div class="panel-model-box">
+                <p class="ai-label">
+                  模型
+                </p>
+                <div class="panel-model-input">
+                  <input
+                    v-model="aiConfig.model"
+                    class="ai-field"
+                    placeholder="聚焦自动获取，可输入筛选"
+                    spellcheck="false"
+                    @focus="onModelFocus"
+                    @blur="onModelBlur"
+                  >
+                  <span v-if="modelsLoading" class="search-spin i-carbon:renew" aria-hidden="true" />
+                  <div v-if="modelFocus && modelSuggestions.length" class="model-results">
+                    <button
+                      v-for="m in modelSuggestions"
+                      :key="m"
+                      type="button"
+                      class="model-item"
+                      @mousedown.prevent="chooseModel(m)"
+                    >
+                      <span class="model-id">{{ m }}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="panel-model-box">
+                <p class="ai-label">
+                  接口地址
+                </p>
+                <input
+                  v-model="aiConfig.baseUrl"
+                  class="ai-field"
+                  placeholder="如 https://api.deepseek.com/v1"
+                  spellcheck="false"
+                >
+              </div>
+              <div class="panel-model-box">
+                <p class="ai-label">
+                  API Key
+                </p>
+                <input
+                  v-model="aiConfig.apiKey"
+                  type="password"
+                  class="ai-field"
+                  placeholder="仅在本地浏览器保存"
+                  spellcheck="false"
+                >
+              </div>
               <div class="panel-row panel-ai-actions">
-                <span class="ai-status" :class="{ 'ai-status-on': aiEnabled }">
-                  {{ aiEnabled ? '● 已启用' : '○ 未配置' }}
+                <span class="ai-status" :class="`ai-status-${testState}`">
+                  {{ statusText }}
                 </span>
-                <button type="button" class="ai-clear" @click="clearConfig">
-                  清除
-                </button>
+                <div class="panel-row panel-ai-buttons">
+                  <button
+                    v-if="configured"
+                    type="button"
+                    class="ai-test"
+                    :disabled="testState === 'testing'"
+                    @click="runTest"
+                  >
+                    {{ testState === 'testing' ? '检测中…' : '测试连接' }}
+                  </button>
+                  <button type="button" class="ai-clear" @click="clearConfig">
+                    清除
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -385,8 +504,66 @@ function chooseModel(item: ModelItem) {
 }
 
 /* AI 配置 */
-.panel-model-search {
+.panel-providers {
+  flex-wrap: wrap;
+}
+
+.provider-chip {
+  min-height: 26px;
+  padding: 4px 10px;
+
+  border: 1px solid rgba(70, 74, 88, 0.16);
+  border-radius: 9999px;
+  background: transparent;
+  color: #5c6070;
+
+  font-size: 11px;
+
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.provider-chip:hover {
+  border-color: color-mix(in srgb, var(--brand, #ed7d68) 50%, transparent);
+  color: var(--brand, #ed7d68);
+}
+
+.provider-chip-active {
+  border-color: var(--brand, #ed7d68);
+  background: color-mix(in srgb, var(--brand, #ed7d68) 10%, transparent);
+  color: var(--brand, #ed7d68);
+}
+
+.panel-model-box {
+  display: flex;
   align-items: center;
+  gap: 6px;
+
+  width: 282px;
+}
+
+.panel-model-input {
+  position: relative;
+
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+}
+
+.panel-model-box .ai-field {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+.panel-model-input .ai-field {
+  padding-right: 30px;
+}
+
+.panel-model-input .search-spin {
+  position: absolute;
+  right: 10px;
 }
 
 .search-spin {
@@ -405,12 +582,17 @@ function chooseModel(item: ModelItem) {
 }
 
 .model-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 10;
+
   display: flex;
   flex-direction: column;
   gap: 2px;
 
   max-height: 180px;
-  width: 230px;
   box-sizing: border-box;
 
   padding: 4px;
@@ -418,6 +600,7 @@ function chooseModel(item: ModelItem) {
   border: 1px solid rgba(70, 74, 88, 0.12);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 8px 20px rgba(20, 29, 55, 0.12);
 
   overflow-y: auto;
 }
@@ -493,6 +676,17 @@ function chooseModel(item: ModelItem) {
   color: #b3b7c2;
 }
 
+/* 字段标签 */
+.ai-label {
+  flex: none;
+
+  width: 44px;
+
+  color: #9aa0ad;
+  font-size: 11px;
+}
+
+/* 连通性状态 */
 .panel-ai-actions {
   justify-content: space-between;
   align-items: center;
@@ -503,8 +697,40 @@ function chooseModel(item: ModelItem) {
   font-size: 11px;
 }
 
-.ai-status-on {
+.ai-status-ok {
   color: #7cb342;
+}
+
+.ai-status-fail {
+  color: #e05252;
+}
+
+.panel-ai-buttons {
+  gap: 6px;
+}
+
+.ai-test {
+  min-height: 24px;
+  padding: 3px 10px;
+
+  border: 1px solid color-mix(in srgb, var(--brand, #ed7d68) 55%, transparent);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--brand, #ed7d68);
+
+  font-size: 11px;
+
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.ai-test:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--brand, #ed7d68) 10%, transparent);
+}
+
+.ai-test:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .ai-clear {
