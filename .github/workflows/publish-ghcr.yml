@@ -5,6 +5,13 @@ on:
     branches: [main]
     tags:
       - 'v*'
+    # 纯文档/编辑器配置变更不触发镜像构建（标签推送不受此过滤影响）
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.vscode/**'
+      - '.idea/**'
   workflow_dispatch:
 
 permissions:

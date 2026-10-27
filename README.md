@@ -1,8 +1,10 @@
 # whatToEat
 
-> 今天吃什么？的决策工具，帮助你快速选择合适的菜谱。
+<p align="center">
+  <img src="./public/logo.png" width="120" alt="whatToEat logo" />
+</p>
 
-<img src="./public/og-image.png" alt="License">
+> 今天吃什么？的决策工具，帮助你快速选择合适的菜谱。
 
 ## 项目介绍
 
@@ -15,17 +17,6 @@ whatToEat 是一个基于 Nuxt 构建的应用，旨在解决日常饮食选择�
 - 🧁 **分类筛选**：气泡式选择弹窗，按菜系缩小抽取范围，空选即全部
 - 📺 **视频做法**：一键搜索 B 站视频教程，页面内弹窗直接播放（移动端为底部抽屉）
 - 📱 **全端适配**：响应式布局，键盘焦点与无障碍支持
-
-## 项目结构
-
-```
-app/
-├── components/    # Eat 主界面、FilterModal/VideoModal 弹窗、Header 品牌导航、FoodItem 菜名链接
-├── composables/   # useRecipes 数据获取、useRandomFood 随机抽取、useSkin 换肤主题色
-└── constants/     # 皮肤、主题色、Emoji 等配置
-server/routes/api/ # recipes 菜谱接口、video-search B 站视频搜索代理
-scripts/crawl.py   # 每周自动抓取 HowToCook 菜谱数据
-```
 
 ## 快速开始
 
@@ -74,7 +65,6 @@ pnpm preview
 
 [![Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/ryanuo/whatToEat)
 [![Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ryanuo/whatToEat)
-[![Railyard](https://app.railyard.run/deploy/badge)](https://app.railyard.run/deploy?repo=https://github.com/ryanuo/whatToEat)
 
 ### Docker 部署
 
