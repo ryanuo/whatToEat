@@ -18,6 +18,15 @@ const hasFood = computed(() => {
   return !!currentFood.value?.name && replaceText(currentFood.value.name) !== '神马'
 })
 
+// 标签页标题跟随抽取结果：抽中后变为「今天吃 XX？」
+useHead({
+  title: computed(() => {
+    return hasFood.value
+      ? `今天吃${replaceText(currentFood.value?.name)}？`
+      : '今天吃什么？随机菜谱推荐'
+  }),
+})
+
 // B 站视频做法搜索链接（提示行入口）
 const videoUrl = computed(() => getVideoSearchLink(currentFood.value?.name))
 

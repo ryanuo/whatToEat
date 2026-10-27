@@ -1,5 +1,5 @@
 export const appName = '今天吃神马？'
-export const appDescription = '一个帮你快速决定“今天吃什么”的有趣工具 🍱'
+export const appDescription = '帮你快速决定「今天吃什么」的趣味工具：随机抽取数百道家常菜，支持分类筛选，图文菜谱与 B 站视频做法一键直达。'
 
 // 背景皮肤配置
 // tileHeight 为图片一个平铺单元的高度（px），背景按此高度无缝滚动
