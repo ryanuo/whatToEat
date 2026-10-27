@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
   const menu = recipes.map(r => `${r.name}｜${r.category}`).join('\n')
   const validNames = new Set(recipes.map(r => r.name))
 
-  const { picks } = await generateJsonObject({
+  const result = await generateJsonObject({
     config,
     schema,
     temperature: 0.3,
@@ -42,5 +42,6 @@ export default defineEventHandler(async (event) => {
   })
 
   // 防幻觉：菜名白名单过滤
+  const picks = result?.picks ?? []
   return { picks: picks.filter(p => validNames.has(p.name)) }
 })

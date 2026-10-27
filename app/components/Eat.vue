@@ -157,7 +157,7 @@ function onConfirmFilter(selected: string[]) {
     </div>
 
     <!-- 正常首页 -->
-    <main v-else class="px-4 pb-12 pt-24 flex flex-col min-h-screen items-center justify-center relative z-20 sm:pt-28">
+    <main v-else class="px-4 pb-44 pt-24 flex flex-col min-h-screen items-center justify-center relative z-20 sm:pt-28">
       <!-- 筛选入口：水印级轻量按钮 -->
       <button type="button" class="filter-entry" @click="isFilterOpen = true">
         <span class="i-carbon:filter" />

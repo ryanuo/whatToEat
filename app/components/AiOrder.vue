@@ -109,6 +109,24 @@ function pickLang(code: string) {
 
 <template>
   <div v-if="aiEnabled" class="ai-order">
+    <!-- 候选结果：固定在输入栏上方，聊天式向上浮出 -->
+    <TransitionGroup v-if="picks.length" name="ai-pick" tag="div" class="ai-picks">
+      <button
+        v-for="p in picks"
+        :key="p.name"
+        type="button"
+        class="ai-pick"
+        @click="onPick(p.name)"
+      >
+        <b>{{ p.name }}</b>
+        <span>{{ p.reason }}</span>
+      </button>
+    </TransitionGroup>
+
+    <p v-if="errorText" class="ai-error">
+      {{ errorText }}
+    </p>
+
     <!-- 输入面板：暖白轻拟物 -->
     <div class="ai-panel">
       <textarea
@@ -190,41 +208,29 @@ function pickLang(code: string) {
         </div>
       </div>
     </div>
-
-    <!-- 候选结果 -->
-    <TransitionGroup v-if="picks.length" name="ai-pick" tag="div" class="ai-picks">
-      <button
-        v-for="p in picks"
-        :key="p.name"
-        type="button"
-        class="ai-pick"
-        @click="onPick(p.name)"
-      >
-        <b>{{ p.name }}</b>
-        <span>{{ p.reason }}</span>
-      </button>
-    </TransitionGroup>
-
-    <p v-if="errorText" class="ai-error">
-      {{ errorText }}
-    </p>
   </div>
 </template>
 
 <style scoped>
 .ai-order {
+  position: fixed;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+
   display: flex;
   flex-direction: column;
   align-items: center;
 
-  margin-top: 24px;
+  width: min(560px, calc(100vw - 28px));
 }
 
 /* 输入面板：暖白轻拟物 */
 .ai-panel {
   position: relative;
 
-  width: min(560px, 100%);
+  width: 100%;
   box-sizing: border-box;
 
   padding: 12px 14px 10px;
@@ -497,9 +503,9 @@ function pickLang(code: string) {
   justify-content: center;
   gap: 8px;
 
-  width: min(560px, 100%);
+  width: 100%;
 
-  margin-top: 12px;
+  margin-bottom: 10px;
 }
 
 .ai-pick {
@@ -542,7 +548,7 @@ function pickLang(code: string) {
 }
 
 .ai-error {
-  margin-top: 10px;
+  margin-bottom: 10px;
   color: #9aa0ad;
   font-size: 12px;
 }

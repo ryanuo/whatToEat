@@ -38,6 +38,9 @@ const jsonInstruction = '输出格式：只给出一个合法的 JSON 对象，�
 // 否则前端 loading 永远转下去，输入框看起来像被卡死。
 const AI_TIMEOUT_MS = 30_000
 
+// 回落纯文本的超时更短，避免两段合计等太久
+const FALLBACK_TIMEOUT_MS = 20_000
+
 interface JsonObjectOptions<S extends z.ZodType> {
   config: AiClientConfig
   schema: S
@@ -56,6 +59,8 @@ function toFriendlyError(error: unknown): never {
   const message = error instanceof Error ? error.message : String(error)
   if (/abort|timed? ?out/i.test(message))
     throw createError({ statusCode: 504, message: 'AI 响应超时，请稍后再试' })
+  if (/no object generated|did not match schema|模型未返回 json/i.test(message))
+    throw createError({ statusCode: 502, message: 'AI 返回了无法解析的内容，建议重试或更换模型' })
   throw createError({ statusCode: 502, message: `AI 调用失败：${message.slice(0, 120)}` })
 }
 
@@ -85,6 +90,10 @@ export async function generateJsonObject<S extends z.ZodType>(options: JsonObjec
       abortSignal: AbortSignal.timeout(AI_TIMEOUT_MS),
     })
 
+    // 模型返回空/不合法结构时 output 为 undefined，不能直接解构
+    if (output == null)
+      throw createError({ statusCode: 502, message: 'AI 返回了无法解析的内容，建议重试或更换模型' })
+
     return output as z.infer<S>
   }
   catch (error) {
@@ -97,9 +106,15 @@ export async function generateJsonObject<S extends z.ZodType>(options: JsonObjec
       system,
       prompt: options.prompt,
       temperature: options.temperature,
-      abortSignal: AbortSignal.timeout(AI_TIMEOUT_MS),
+      abortSignal: AbortSignal.timeout(FALLBACK_TIMEOUT_MS),
     })
 
-    return options.schema.parse(parseJsonLoose(text)) as z.infer<S>
+    try {
+      return options.schema.parse(parseJsonLoose(text)) as z.infer<S>
+    }
+    catch (parseError) {
+      console.error('AI 返回内容无法解析', text.slice(0, 200), parseError)
+      throw createError({ statusCode: 502, message: 'AI 返回了无法解析的内容，建议重试或更换模型' })
+    }
   }
 }

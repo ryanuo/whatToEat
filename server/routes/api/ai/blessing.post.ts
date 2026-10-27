@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
   if (hit && Date.now() - hit.at < TTL)
     return { text: hit.text }
 
-  const { text } = await generateJsonObject({
+  const result = await generateJsonObject({
     config,
     schema: z.object({ text: z.string().min(4).max(60) }),
     temperature: 0.9,
@@ -33,6 +33,10 @@ export default defineEventHandler(async (event) => {
     ].join('\n'),
     prompt: `菜品：${dish}`,
   })
+
+  const text = result?.text
+  if (!text)
+    throw createError({ statusCode: 502, message: 'AI 返回了无法解析的内容，建议重试或更换模型' })
 
   cache.set(cacheKey, { text, at: Date.now() })
   return { text }
