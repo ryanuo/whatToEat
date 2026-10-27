@@ -16,7 +16,8 @@ const emit = defineEmits<{
 
 const draftSelected = ref<string[]>([])
 
-watch(open, (val) => {
+// 打开时从当前已应用的选择初始化草稿（注意必须用 getter 监听 props）
+watch(() => props.open, (val) => {
   if (val)
     draftSelected.value = [...props.selected]
 })
