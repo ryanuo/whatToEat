@@ -1,5 +1,3 @@
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
-import { generateObject } from 'ai'
 import { z } from 'zod'
 
 // 劝吃文案：抽中菜品后生成一句俏皮的推荐语
@@ -11,36 +9,31 @@ const TTL = 24 * 60 * 60 * 1000
 export default defineEventHandler(async (event) => {
   const config = readAiConfig(event)
   if (!config)
-    throw createError({ statusCode: 400, statusMessage: '未配置 AI' })
+    throw createError({ statusCode: 400, message: '未配置 AI' })
 
   const body = await readBody(event).catch(() => undefined)
   const dish = typeof body?.dish === 'string' ? body.dish.trim() : ''
   if (!dish)
-    throw createError({ statusCode: 400, statusMessage: '缺少菜名' })
+    throw createError({ statusCode: 400, message: '缺少菜名' })
 
   const cacheKey = `${config.model}:${dish}`
   const hit = cache.get(cacheKey)
   if (hit && Date.now() - hit.at < TTL)
     return { text: hit.text }
 
-  const provider = createOpenAICompatible({
-    name: 'user-provider',
-    baseURL: config.baseUrl,
-    apiKey: config.apiKey,
-  })
-
-  const { object } = await generateObject({
-    model: provider.chatModel(config.model),
+  const { text } = await generateJsonObject({
+    config,
     schema: z.object({ text: z.string().min(4).max(60) }),
     temperature: 0.9,
     system: [
       '你是「今天吃神马」的美食文案师，为抽中的菜品写一句劝吃文案。',
       '要求：口语化、俏皮有梗、贴合菜品特点、不超过 30 字、最多 1 个 emoji、不要引号和书名号、不要「今日宜」开头重复模板。',
       '示例：周二的疲惫，只有一碗热汤面能治愈。',
+      '以 JSON 格式返回：{"text":"文案"}',
     ].join('\n'),
     prompt: `菜品：${dish}`,
   })
 
-  cache.set(cacheKey, { text: object.text, at: Date.now() })
-  return { text: object.text }
+  cache.set(cacheKey, { text, at: Date.now() })
+  return { text }
 })

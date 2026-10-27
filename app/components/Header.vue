@@ -9,7 +9,7 @@ const testing = ref(false)
 const testFailed = ref(false)
 
 watch(
-  () => `${aiConfig.value.baseUrl}|${aiConfig.value.apiKey}|${aiConfig.value.model}`,
+  () => `${aiConfig.baseUrl}|${aiConfig.apiKey}|${aiConfig.model}`,
   () => {
     testFailed.value = false
   },
@@ -20,7 +20,7 @@ const testState = computed<'empty' | 'unverified' | 'testing' | 'ok' | 'fail'>((
     return 'empty'
   if (testing.value)
     return 'testing'
-  if (aiConfig.value.ready)
+  if (aiConfig.ready)
     return 'ok'
   return testFailed.value ? 'fail' : 'unverified'
 })
@@ -51,13 +51,19 @@ onClickOutside(pickerRef, () => {
   isPickerOpen.value = false
 })
 
+// 会话级 ready：刷新后若配置齐全则静默重测，避免 AI 面板凭空消失
+onMounted(async () => {
+  if (configured.value && !aiConfig.ready)
+    await testConnection()
+})
+
 /* ---------------- AI 配置：厂商快捷 + 动态模型列表 ---------------- */
 
-const providerId = ref(matchAiProvider(aiConfig.value.baseUrl)?.id ?? 'custom')
+const providerId = ref(matchAiProvider(aiConfig.baseUrl)?.id ?? 'custom')
 
 // 手动修改 Base URL 后自动匹配预设厂商，匹配不上回落「自定义」
 watch(
-  () => aiConfig.value.baseUrl,
+  () => aiConfig.baseUrl,
   (url) => {
     providerId.value = matchAiProvider(url)?.id ?? 'custom'
   },
@@ -73,14 +79,14 @@ function selectProvider(id: string) {
 
   const provider = aiProviders.find(p => p.id === id)
   if (provider) {
-    aiConfig.value = { ...aiConfig.value, baseUrl: provider.baseUrl }
+    aiConfig.baseUrl = provider.baseUrl
     modelsCacheKey.value = ''
     modelList.value = []
   }
 }
 
 async function ensureModels() {
-  const c = aiConfig.value
+  const c = aiConfig
   if (!c.baseUrl || !c.apiKey || modelsLoading.value)
     return
 
@@ -107,12 +113,12 @@ const modelFocus = ref(false)
 let blurTimer: ReturnType<typeof setTimeout> | null = null
 
 const modelSuggestions = computed(() => {
-  const q = aiConfig.value.model.trim().toLowerCase()
+  const q = aiConfig.model.trim().toLowerCase()
   const list = q
     ? modelList.value.filter(m => m.toLowerCase().includes(q))
     : modelList.value
 
-  return list.filter(m => m !== aiConfig.value.model).slice(0, 8)
+  return list.filter(m => m !== aiConfig.model).slice(0, 8)
 })
 
 function onModelFocus() {
@@ -130,7 +136,7 @@ function onModelBlur() {
 }
 
 function chooseModel(model: string) {
-  aiConfig.value = { ...aiConfig.value, model }
+  aiConfig.model = model
   modelFocus.value = false
 }
 </script>

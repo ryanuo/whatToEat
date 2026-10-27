@@ -7,10 +7,12 @@ const { isPlaying, currentFood, shakeTitle, togglePlay } = useRandomFood(recipes
 
 const { skin: bgSkin, themeColor } = useSkin()
 
-// 主题色注入 :root，保证 Teleport 到 body 的弹窗也能取到 var(--brand)
+// 主题色与皮肤底色注入 :root，保证 Teleport 到 body 的弹窗也能取到变量
 watchEffect(() => {
-  if (import.meta.client)
+  if (import.meta.client) {
     document.documentElement.style.setProperty('--brand', themeColor.value.color)
+    document.documentElement.style.setProperty('--skin-bg', bgSkin.value.bgColor)
+  }
 })
 
 // 当前菜品是否有可跳转的做法

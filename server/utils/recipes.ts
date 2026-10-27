@@ -37,7 +37,7 @@ async function fetchJSON(url: string): Promise<unknown> {
 
   throw createError({
     statusCode: 502,
-    statusMessage: `菜谱数据源不可用: ${url}`,
+    message: `菜谱数据源不可用: ${url}`,
   })
 }
 
@@ -70,7 +70,7 @@ async function fetchSelfRecipes(event: H3Event): Promise<unknown> {
 
 function normalizeRecipes(raw: unknown): Recipe[] {
   if (!Array.isArray(raw))
-    throw createError({ statusCode: 502, statusMessage: '菜谱数据格式不正确' })
+    throw createError({ statusCode: 502, message: '菜谱数据格式不正确' })
 
   return raw
     .filter((item): item is Record<string, unknown> => {

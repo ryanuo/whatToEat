@@ -5,7 +5,7 @@
 export default defineEventHandler(async (event) => {
   const config = readAiConfig(event)
   if (!config)
-    throw createError({ statusCode: 400, statusMessage: '未配置 AI' })
+    throw createError({ statusCode: 400, message: '未配置 AI' })
 
   const url = `${config.baseUrl.replace(/\/+$/, '')}/models`
 
@@ -25,6 +25,6 @@ export default defineEventHandler(async (event) => {
   }
   catch (error) {
     console.error(`获取模型列表失败 ${url}`, error)
-    throw createError({ statusCode: 502, statusMessage: '模型接口不可用，请检查地址与 Key' })
+    throw createError({ statusCode: 502, message: '模型接口不可用，请检查地址与 Key' })
   }
 })

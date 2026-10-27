@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { speechLanguages } from '~/composables/useSpeechInput'
 import { useStorage } from '@vueuse/core'
+import { speechLanguages } from '~/composables/useSpeechInput'
 
 // 智能点餐输入栏：textarea + 麦克风/语言/发送，AI 点菜结果点击落到大标题
 const emit = defineEmits<{
@@ -8,6 +8,9 @@ const emit = defineEmits<{
 }>()
 
 const { aiEnabled, aiHeaders } = useAiConfig()
+
+// 前端请求超时：略大于服务端 30s，保证服务端先给出明确错误
+const REQUEST_TIMEOUT_MS = 35_000
 
 const message = ref('')
 const loading = ref(false)
@@ -51,10 +54,15 @@ async function submit() {
   errorText.value = ''
   picks.value = []
 
+  // 厂商可能很慢（实测 Qwen 约 20s），前端也设个上限，
+  // 免得 loading 一直转下去、整块输入区看着像卡死。
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+
   try {
     const res = await $fetch<{ picks: { name: string, reason: string }[] }>(
       '/api/ai/recommend',
-      { method: 'POST', headers: aiHeaders(), body: { message: msg } },
+      { method: 'POST', headers: aiHeaders(), body: { message: msg }, signal: controller.signal },
     )
     picks.value = res.picks
 
@@ -62,10 +70,19 @@ async function submit() {
       errorText.value = 'AI 没找到合适的菜，换个说法试试？'
   }
   catch (err) {
-    errorText.value = 'AI 出走了，稍后再试'
+    // 把服务端的失败原因带出来（额度、地址、模型能力等），不只剩一句笼统的报错
+    if ((err as { name?: string })?.name === 'AbortError') {
+      errorText.value = 'AI 想太久没回话，换个说法或稍后再试'
+    }
+    else {
+      const data = (err as { data?: { statusMessage?: string } })?.data
+      const reason = data?.statusMessage?.trim()
+      errorText.value = reason ? `AI 没点成：${reason}` : 'AI 出走了，稍后再试'
+    }
     console.error('AI 点菜失败', err)
   }
   finally {
+    clearTimeout(timer)
     loading.value = false
   }
 }
@@ -103,6 +120,12 @@ function pickLang(code: string) {
         @input="autoResize"
         @keydown="onKeydown"
       />
+
+      <!-- 加载遮罩：整块面板明确进入处理中状态 -->
+      <div v-if="loading" class="ai-loading">
+        <span class="i-carbon:circle-dash ai-anim-spin" aria-hidden="true" />
+        <span>AI 正在想…</span>
+      </div>
 
       <div class="ai-toolbar">
         <!-- 左：语音输入 -->
@@ -199,6 +222,8 @@ function pickLang(code: string) {
 
 /* 输入面板：暖白轻拟物 */
 .ai-panel {
+  position: relative;
+
   width: min(560px, 100%);
   box-sizing: border-box;
 
@@ -206,7 +231,7 @@ function pickLang(code: string) {
 
   border: 1px solid rgba(210, 202, 188, 0.85);
   border-radius: 20px;
-  background: rgba(255, 253, 248, 0.94);
+  background: color-mix(in srgb, var(--skin-bg, #f6f6f7) 84%, #ffffff);
   box-shadow: 0 4px 16px rgba(93, 79, 58, 0.07);
 
   text-align: left;
@@ -255,6 +280,26 @@ function pickLang(code: string) {
   justify-content: space-between;
 
   margin-top: 6px;
+}
+
+/* 加载遮罩：覆盖整个输入面板，明确处理中 */
+.ai-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--skin-bg, #f6f6f7) 55%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+
+  color: #8b8577;
+  font-size: 13px;
 }
 
 .ai-mic-group {
@@ -371,7 +416,7 @@ function pickLang(code: string) {
 
   border: 1px solid rgba(210, 202, 188, 0.85);
   border-radius: 12px;
-  background: rgba(255, 253, 248, 0.98);
+  background: color-mix(in srgb, var(--skin-bg, #f6f6f7) 94%, #ffffff);
   box-shadow: 0 10px 28px rgba(93, 79, 58, 0.14);
 
   overflow-y: auto;
@@ -469,7 +514,7 @@ function pickLang(code: string) {
 
   border: 1px solid rgba(210, 202, 188, 0.85);
   border-radius: 9999px;
-  background: rgba(255, 253, 248, 0.92);
+  background: color-mix(in srgb, var(--skin-bg, #f6f6f7) 90%, #ffffff);
 
   cursor: pointer;
   transition: all 160ms ease;

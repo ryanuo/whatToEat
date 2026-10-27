@@ -31,27 +31,61 @@ export function matchAiProvider(baseUrl: string): AiProvider | undefined {
 
 const emptyConfig: AiConfig = { baseUrl: '', apiKey: '', model: '' }
 
-const config = useStorage<AiConfig>('ai-config', emptyConfig)
+// 只持久化连接字段。ready 是「本次会话测通过」的状态，不入 localStorage：
+// 1) 避免存储写入与失效重置互相抢跑（useStorage 的写 watcher 会 pause/resume，
+//    重置值可能只改内存不落盘，导致内存与存储不一致）；
+// 2) 刷新后不该凭旧的 ready 复活，字段变了就得重新测。
+const stored = useStorage<Omit<AiConfig, 'ready'>>('ai-config', emptyConfig)
+
+// 连通性测试结果：会话内有效
+const ready = ref(false)
 
 // 任一连接字段变化后，上次的连通性结果作废
 watch(
-  () => `${config.value.baseUrl}|${config.value.apiKey}|${config.value.model}`,
+  () => `${stored.value.baseUrl}|${stored.value.apiKey}|${stored.value.model}`,
   () => {
-    if (config.value.ready)
-      config.value = { ...config.value, ready: false }
+    ready.value = false
   },
 )
 
 export function useAiConfig() {
+  // 对外的 config：字段直接可写（v-model 绑到 stored），ready 从会话状态带出
+  const config = reactive({
+    get baseUrl() {
+      return stored.value.baseUrl
+    },
+    set baseUrl(v: string) {
+      stored.value = { ...stored.value, baseUrl: v }
+    },
+    get apiKey() {
+      return stored.value.apiKey
+    },
+    set apiKey(v: string) {
+      stored.value = { ...stored.value, apiKey: v }
+    },
+    get model() {
+      return stored.value.model
+    },
+    set model(v: string) {
+      stored.value = { ...stored.value, model: v }
+    },
+    get ready() {
+      return ready.value
+    },
+    set ready(v: boolean | undefined) {
+      ready.value = v === true
+    },
+  }) as AiConfig
+
   const configured = computed(() => {
-    const c = config.value
+    const c = stored.value
     return !!(c.baseUrl && c.apiKey && c.model)
   })
 
-  const aiEnabled = computed(() => configured.value && config.value.ready === true)
+  const aiEnabled = computed(() => configured.value && ready.value)
 
   function aiHeaders(): Record<string, string> {
-    const c = config.value
+    const c = stored.value
     return {
       'x-ai-base-url': c.baseUrl,
       'x-ai-api-key': c.apiKey,
@@ -63,17 +97,18 @@ export function useAiConfig() {
   async function testConnection(): Promise<boolean> {
     try {
       await $fetch('/api/ai/models', { headers: aiHeaders() })
-      config.value = { ...config.value, ready: true }
+      ready.value = true
       return true
     }
     catch {
-      config.value = { ...config.value, ready: false }
+      ready.value = false
       return false
     }
   }
 
   function clearConfig() {
-    config.value = { ...emptyConfig }
+    stored.value = { ...emptyConfig }
+    ready.value = false
   }
 
   return { config, configured, aiEnabled, aiHeaders, testConnection, clearConfig }

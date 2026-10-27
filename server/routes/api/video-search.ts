@@ -42,7 +42,7 @@ function pickVideos(raw: unknown): VideoItem[] {
 export default defineEventHandler(async (event) => {
   const name = getQuery(event).name
   if (typeof name !== 'string' || !name.trim()) {
-    throw createError({ statusCode: 400, statusMessage: '缺少菜名参数' })
+    throw createError({ statusCode: 400, message: '缺少菜名参数' })
   }
 
   const key = name.trim()
