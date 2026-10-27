@@ -30,6 +30,54 @@ useHead({
 // B 站视频做法搜索链接（提示行入口）
 const videoUrl = computed(() => getVideoSearchLink(currentFood.value?.name))
 
+/* ---------------- AI 劝吃文案（副标题替换） ---------------- */
+
+const { aiEnabled, aiHeaders } = useAiConfig()
+
+const blessing = ref('')
+const blessingCache = new Map<string, string>()
+
+// 停止抽取落定后请求一次文案；开抽/未配置/失败时保持默认副标题
+watch([() => currentFood.value?.name, isPlaying], async ([name, playing]) => {
+  blessing.value = ''
+
+  if (playing || !name)
+    return
+
+  const dish = replaceText(name)
+  if (dish === '神马' || !aiEnabled.value)
+    return
+
+  const cached = blessingCache.get(dish)
+  if (cached) {
+    blessing.value = cached
+    return
+  }
+
+  try {
+    const res = await $fetch<{ text: string }>('/api/ai/blessing', {
+      method: 'POST',
+      headers: aiHeaders(),
+      body: { dish },
+    })
+    // 期间重新开抽或菜品已变则丢弃
+    if (currentFood.value?.name === name && !isPlaying.value) {
+      blessingCache.set(dish, res.text)
+      blessing.value = res.text
+    }
+  }
+  catch {
+    // 保持默认副标题
+  }
+})
+
+// AI 点菜选中后直接落到大标题
+function onAiPick(name: string) {
+  const food = recipes.value.find(r => r.name === name)
+  if (food)
+    currentFood.value = food
+}
+
 /* ---------------- 弹窗状态 ---------------- */
 
 const isFilterOpen = ref(false)
@@ -116,8 +164,12 @@ function onConfirmFilter(selected: string[]) {
 
       <!-- 中央主视觉 -->
       <section class="hero-content text-center w-full">
+        <!-- 副标题：AI 劝吃文案可用时替换默认句 -->
         <p class="hero-subtitle">
-          发现美味灵感，开启今日好胃口
+          <Transition name="blessing" mode="out-in">
+            <span v-if="blessing" :key="blessing">{{ blessing }}</span>
+            <span v-else key="default">发现美味灵感，开启今日好胃口</span>
+          </Transition>
         </p>
 
         <h1 class="hero-title text-[#141D37] leading-tight font-semibold mb-5" :class="{ 'animate-shake': shakeTitle }">
@@ -154,6 +206,9 @@ function onConfirmFilter(selected: string[]) {
             <FancyButton :text="isPlaying ? '停止' : '开始'" />
           </button>
         </div>
+
+        <!-- AI 点菜：自然语言输入（配置了 AI 才显示） -->
+        <AiOrder @pick="onAiPick" />
       </section>
     </main>
 
@@ -247,6 +302,7 @@ function onConfirmFilter(selected: string[]) {
 /* 局部强调：仅「吃」用低饱和主题色，呼应背景线稿点缀 */
 .eat {
   color: color-mix(in srgb, var(--brand, #ed7d68) 72%, #707486);
+  margin: 0 8px;
 }
 
 .hero-subtitle {
@@ -254,6 +310,25 @@ function onConfirmFilter(selected: string[]) {
   font-size: 15px;
   line-height: 1.8;
   letter-spacing: 0.015em;
+  margin-bottom: 10px;
+}
+
+/* AI 劝吃文案淡入替换默认副标题 */
+.blessing-enter-active,
+.blessing-leave-active {
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
+}
+
+.blessing-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.blessing-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 .hero-action {
@@ -282,8 +357,8 @@ function onConfirmFilter(selected: string[]) {
   align-items: center;
   gap: 5px;
 
-  /* 上移贴近标题（h1 自带 mb-5），与下方开始按钮保持呼吸感 */
-  margin: -10px 0 22px;
+  /* 上移贴近标题（h1 自带 mb-5） */
+  margin: -10px 0 0;
   padding: 6px 10px;
 
   color: #928d82;

@@ -2,12 +2,58 @@
 import { appName } from '~/constants'
 
 const { skin, setSkin, skins, themeColor, setThemeColor, themeColors } = useSkin()
+const { config: aiConfig, aiEnabled, clearConfig } = useAiConfig()
 const isPickerOpen = ref(false)
 const pickerRef = ref<HTMLElement>()
 
 onClickOutside(pickerRef, () => {
   isPickerOpen.value = false
 })
+
+/* ---------------- 模型搜索（models.dev） ---------------- */
+
+interface ModelItem {
+  providerId: string
+  providerName: string
+  baseUrl: string
+  modelId: string
+}
+
+const modelQuery = ref('')
+const modelResults = ref<ModelItem[]>([])
+const searching = ref(false)
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+
+function onModelSearch() {
+  if (searchTimer)
+    clearTimeout(searchTimer)
+
+  searchTimer = setTimeout(async () => {
+    const q = modelQuery.value.trim()
+    if (!q) {
+      modelResults.value = []
+      return
+    }
+
+    searching.value = true
+    try {
+      const res = await $fetch<{ items: ModelItem[] }>('/api/ai/models', { params: { q } })
+      modelResults.value = res.items
+    }
+    catch {
+      modelResults.value = []
+    }
+    finally {
+      searching.value = false
+    }
+  }, 300)
+}
+
+function chooseModel(item: ModelItem) {
+  aiConfig.value = { ...aiConfig.value, baseUrl: item.baseUrl, model: item.modelId }
+  modelQuery.value = ''
+  modelResults.value = []
+}
 </script>
 
 <template>
@@ -69,6 +115,62 @@ onClickOutside(pickerRef, () => {
                   @click="setThemeColor(t.key)"
                 >
                   <span v-if="t.key === themeColor.key" class="i-carbon:checkmark" />
+                </button>
+              </div>
+            </div>
+
+            <!-- AI 助手：models.dev 搜索选模型 + 自填 Key，仅存本地浏览器 -->
+            <div class="panel-section">
+              <p class="panel-label">
+                AI 助手（Key 仅存本地浏览器）
+              </p>
+              <div class="panel-row panel-model-search">
+                <input
+                  v-model="modelQuery"
+                  class="ai-field"
+                  placeholder="搜索厂商 / 模型，如 deepseek、glm"
+                  spellcheck="false"
+                  @input="onModelSearch"
+                >
+                <span v-if="searching" class="search-spin i-carbon:renew" aria-hidden="true" />
+              </div>
+              <div v-if="modelResults.length" class="model-results">
+                <button
+                  v-for="r in modelResults"
+                  :key="`${r.providerId}-${r.modelId}`"
+                  type="button"
+                  class="model-item"
+                  @click="chooseModel(r)"
+                >
+                  <b>{{ r.providerName }}</b>
+                  <span class="model-id">{{ r.modelId }}</span>
+                </button>
+              </div>
+              <input
+                v-model="aiConfig.baseUrl"
+                class="ai-field"
+                placeholder="Base URL，如 https://api.deepseek.com/v1"
+                spellcheck="false"
+              >
+              <input
+                v-model="aiConfig.apiKey"
+                type="password"
+                class="ai-field"
+                placeholder="API Key"
+                spellcheck="false"
+              >
+              <input
+                v-model="aiConfig.model"
+                class="ai-field"
+                placeholder="模型，如 deepseek-chat"
+                spellcheck="false"
+              >
+              <div class="panel-row panel-ai-actions">
+                <span class="ai-status" :class="{ 'ai-status-on': aiEnabled }">
+                  {{ aiEnabled ? '● 已启用' : '○ 未配置' }}
+                </span>
+                <button type="button" class="ai-clear" @click="clearConfig">
+                  清除
                 </button>
               </div>
             </div>
@@ -280,6 +382,149 @@ onClickOutside(pickerRef, () => {
   box-shadow:
     0 0 0 2px rgba(255, 255, 255, 0.96),
     0 0 0 4px var(--brand, #ed7d68);
+}
+
+/* AI 配置 */
+.panel-model-search {
+  align-items: center;
+}
+
+.search-spin {
+  flex: none;
+
+  color: #9aa0ad;
+  font-size: 14px;
+
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.model-results {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  max-height: 180px;
+  width: 230px;
+  box-sizing: border-box;
+
+  padding: 4px;
+
+  border: 1px solid rgba(70, 74, 88, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.98);
+
+  overflow-y: auto;
+}
+
+.model-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  padding: 6px 8px;
+
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+
+  cursor: pointer;
+  text-align: left;
+
+  transition: background 120ms ease;
+}
+
+.model-item:hover {
+  background: #f3f4f6;
+}
+
+.model-item b {
+  overflow: hidden;
+  flex: none;
+
+  max-width: 96px;
+
+  color: #141d37;
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-id {
+  overflow: hidden;
+
+  color: #9aa0ad;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-field {
+  display: block;
+  width: 230px;
+  box-sizing: border-box;
+
+  min-height: 32px;
+  padding: 6px 10px;
+
+  border: 1px solid rgba(70, 74, 88, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #141d37;
+
+  font-size: 12px;
+
+  outline: none;
+  transition: border-color 160ms ease;
+}
+
+.ai-field:focus {
+  border-color: var(--brand, #ed7d68);
+}
+
+.ai-field::placeholder {
+  color: #b3b7c2;
+}
+
+.panel-ai-actions {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-status {
+  color: #9aa0ad;
+  font-size: 11px;
+}
+
+.ai-status-on {
+  color: #7cb342;
+}
+
+.ai-clear {
+  min-height: 24px;
+  padding: 3px 9px;
+
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: #9aa0ad;
+
+  font-size: 11px;
+
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.ai-clear:hover {
+  background: #f3f4f6;
+  color: #141d37;
 }
 
 .drop-enter-active,

@@ -14,6 +14,11 @@
     "lint": "eslint .",
     "typecheck": "nuxt typecheck"
   },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "catalog:",
+    "ai": "catalog:",
+    "zod": "catalog:"
+  },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:dev",
     "@iconify-json/carbon": "catalog:icons",

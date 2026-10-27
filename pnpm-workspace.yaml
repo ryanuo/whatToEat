@@ -1,4 +1,8 @@
 packages: []
+catalog:
+  '@ai-sdk/openai-compatible': ^3.0.79
+  ai: ^7.0.154
+  zod: ^4.6.7
 catalogs:
   build:
     '@nuxt/devtools': ^2.6.5
