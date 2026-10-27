@@ -27,6 +27,9 @@ export function createAiProvider(config: AiClientConfig) {
     name: 'user-provider',
     baseURL: config.baseUrl,
     apiKey: config.apiKey,
+    // 开启严格 JSON Schema 模式：支持的厂商更稳；
+    // 不支持的厂商报 response_format 类错误，由 generateJsonObject 的纯文本回落兜住
+    supportsStructuredOutputs: true,
   })
 }
 

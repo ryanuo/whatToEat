@@ -149,11 +149,12 @@ function pickLang(code: string) {
         <!-- 左：语音输入 -->
         <div class="ai-mic-group">
           <button
-            v-if="micSupported"
             type="button"
             class="ai-mic"
             :class="{ 'ai-mic-recording': isListening }"
-            :title="isListening ? '停止录音' : '语音输入'"
+            :disabled="!micSupported"
+            :title="micSupported ? (isListening ? '停止录音' : '语音输入') : '当前浏览器不支持语音输入'"
+            :aria-disabled="!micSupported"
             :aria-pressed="isListening"
             @click="toggleMic"
           >
@@ -340,6 +341,19 @@ function pickLang(code: string) {
 .ai-mic:focus-visible {
   outline: 2px solid rgba(124, 179, 66, 0.7);
   outline-offset: 2px;
+}
+
+.ai-mic:disabled {
+  border-color: rgba(210, 202, 188, 0.55);
+  background: rgba(255, 255, 255, 0.5);
+  color: #c8c2b6;
+
+  cursor: default;
+}
+
+.ai-mic:disabled:hover {
+  color: #c8c2b6;
+  border-color: rgba(210, 202, 188, 0.55);
 }
 
 .ai-mic-recording {
